@@ -1,5 +1,5 @@
 FROM ubuntu:14.04
-MAINTAINER Elico-Corp <info@elico-corp.com>
+MAINTAINER Elico Corp <info@elico-corp.com>
 
 # generate locales
 RUN locale-gen en_US.UTF-8 && update-locale

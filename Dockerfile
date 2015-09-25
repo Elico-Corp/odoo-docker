@@ -38,6 +38,10 @@ RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main" > /etc/
     libldap2-dev \
     libsasl2-dev \
     libssl-dev \
+    # SM: Librairies required for LESS
+    node-less \
+    nodejs \
+    npm \
     # SM: This library is necessary to upgrade PIL/pillow module
     libjpeg8-dev \
     # SM: Git is required to clone Odoo OCB project
@@ -50,6 +54,10 @@ RUN pip install -r /opt/sources/pip-req.txt
 
 # SM: Upgrade pillow to allow JPEG resize operations (used by demo data)
 RUN pip install -i --upgrade pillow
+
+# SM: Install LESS
+RUN npm install -g less less-plugin-clean-css
+RUN ln -s /usr/bin/nodejs /usr/bin/node
 
 # must unzip this package to make it visible as an odoo external dependency
 RUN easy_install -UZ py3o.template
@@ -69,9 +77,9 @@ USER odoo
 RUN /bin/bash -c "mkdir -p /opt/odoo/{bin,etc,sources/odoo,additional_addons,data}"
 RUN /bin/bash -c "mkdir -p /opt/odoo/var/{run,log,egg-cache}"
 
-# SM: Add Odoo OCB sources (remove .git folder to reduce image size)
+# SM: Add Odoo sources (remove .git folder to reduce image size)
 WORKDIR /opt/odoo/sources
-RUN git clone https://github.com/OCA/OCB.git -b 8.0 odoo && \
+RUN git clone https://github.com/odoo/odoo.git -b 9.0 odoo && \
        rm -rf odoo/.git
 
 # Execution environment

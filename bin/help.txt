@@ -1,0 +1,24 @@
+Usage: docker run [OPTIONS] xcgd/odoo[:TAG] [COMMAND ...]
+
+Run odoo in a docker container.
+
+Positional arguments:
+  COMMAND          The command to run. (default: help)
+
+Commands:
+  help             Show this help message
+  start            Run odoo server in the background (accept additional arguments passed to odoo command)
+  login            Run in shell mode as odoo user
+
+Examples:
+  In these examples, we link to a container named "pg93" which serves PostreSQL (see xcgd/postgresql)
+
+  Run odoo V7 in the background as "xcgd.odoo" on localhost:8069 and use /your/local/etc/ to load odoo.conf
+  $ docker run --name="xcgd.odoo" -v /your/local/etc:/opt/odoo/etc -p 8069:8069 --link pg93:db -d xcgd/odoo:7.0 start
+
+  Run the V8 image with an interactive shell and remove the container on logout
+  $ docker run -ti --rm --link pg93:db xcgd/odoo:8.0 login
+
+  Run the v8 image and enforce a database `mydb` update, then remove the container
+  $ docker run -ti --rm --link pg93:db xcgd/odoo:8.0 start --update=all --workers=0 --no-xmlrpc --database=mydb --stop-after-init 
+

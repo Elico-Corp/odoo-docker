@@ -27,6 +27,7 @@ RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main" > /etc/
     libxrender1 libxext6 fontconfig \
     python-zsi \
     python-lasso \
+    libzmq3 \
     # SM: libpq-dev is needed to install pg_config which is required by psycopg2
     libpq-dev \
     # SM: These libraries are needed to install the pip modules

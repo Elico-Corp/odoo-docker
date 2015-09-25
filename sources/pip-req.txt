@@ -55,3 +55,5 @@ Werkzeug==0.8.3
 wheel==0.24.0
 wsgiref==0.1.2
 xlwt==0.7.5
+ofxparse==0.14
+Python-Chart==1.39

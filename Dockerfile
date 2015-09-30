@@ -1,5 +1,5 @@
 FROM elicocorp/odoo:7.0
-MAINTAINER Elico-Corp <info@elico-corp.com>
+MAINTAINER Elico-Corp <contact@elico-corp.com>
 
 # SM: Ubuntu CN mirror
 RUN sed -i 's/archive\.ubuntu\.com/mirrors.sohu.com/g' /etc/apt/sources.list

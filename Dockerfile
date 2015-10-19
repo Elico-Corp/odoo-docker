@@ -80,7 +80,9 @@ RUN /bin/bash -c "mkdir -p /opt/odoo/var/{run,log,egg-cache}"
 # SM: Add Odoo sources (remove .git folder to reduce image size)
 WORKDIR /opt/odoo/sources
 RUN git clone https://github.com/odoo/odoo.git -b 9.0 odoo && \
-       rm -rf odoo/.git
+      cd odoo && \
+      git reset --hard 7592d85b1fe7e4e7cd4473d263d145380b8ed406
+      rm -rf .git
 
 # Execution environment
 USER 0

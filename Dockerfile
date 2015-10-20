@@ -28,9 +28,9 @@ RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main" > /etc/
     python-zsi \
     python-lasso \
     libzmq3 \
-    # SM: libpq-dev is needed to install pg_config which is required by psycopg2
+    # libpq-dev is needed to install pg_config which is required by psycopg2
     libpq-dev \
-    # SM: These libraries are needed to install the pip modules
+    # These libraries are needed to install the pip modules
     python-dev \
     libffi-dev \
     libxml2-dev \
@@ -38,32 +38,28 @@ RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main" > /etc/
     libldap2-dev \
     libsasl2-dev \
     libssl-dev \
-    # SM: Librairies required for LESS
+    # Librairies required for LESS
     node-less \
     nodejs \
     npm \
-    # SM: This library is necessary to upgrade PIL/pillow module
+    # This library is necessary to upgrade PIL/pillow module
     libjpeg8-dev \
-    # SM: Git is required to clone Odoo OCB project
+    # Git is required to clone Odoo OCB project
     git
 
+# Install Odoo python dependencies
 ADD sources/pip-req.txt /opt/sources/pip-req.txt
-
-# SM: Install Odoo python dependencies
 RUN pip install -r /opt/sources/pip-req.txt
 
-# SM: Upgrade pillow to allow JPEG resize operations (used by demo data)
-RUN pip install -i --upgrade pillow
-
 # SM: Install LESS
-RUN npm install -g less less-plugin-clean-css
-RUN ln -s /usr/bin/nodejs /usr/bin/node
+RUN npm install -g less less-plugin-clean-css && \
+  ln -s /usr/bin/nodejs /usr/bin/node
 
 # must unzip this package to make it visible as an odoo external dependency
 RUN easy_install -UZ py3o.template
 
 # install wkhtmltopdf based on QT5
-# SM: do not use latest version (0.12.2.1) because it causes the footer issue (see https://github.com/odoo/odoo/issues/4806)
+# Warning: do not use latest version (0.12.2.1) because it causes the footer issue (see https://github.com/odoo/odoo/issues/4806)
 ADD http://download.gna.org/wkhtmltopdf/0.12/0.12.1/wkhtmltox-0.12.1_linux-trusty-amd64.deb /opt/sources/wkhtmltox.deb
 RUN dpkg -i /opt/sources/wkhtmltox.deb
 
@@ -77,11 +73,11 @@ USER odoo
 RUN /bin/bash -c "mkdir -p /opt/odoo/{bin,etc,sources/odoo,additional_addons,data}"
 RUN /bin/bash -c "mkdir -p /opt/odoo/var/{run,log,egg-cache}"
 
-# SM: Add Odoo sources (remove .git folder to reduce image size)
+# Add Odoo OCB sources and remove .git folder in order to reduce image size
 WORKDIR /opt/odoo/sources
-RUN git clone https://github.com/odoo/odoo.git -b 9.0 odoo && \
+RUN git clone https://github.com/OCA/OCB.git -b 9.0 odoo && \
   cd odoo && \
-  git reset --hard c0a2bc8e547d7aca64a3a99cea65a939b4ebff98 && \
+  git reset --hard f75dcfe4b0eab32cc23784974b623def87aa468b && \
   rm -rf .git
 
 # Execution environment

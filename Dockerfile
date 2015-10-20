@@ -67,7 +67,9 @@ RUN /bin/bash -c "mkdir -p /opt/odoo/var/{run,log,egg-cache}"
 # Add Odoo OCB sources and remove .git folder in order to reduce image size
 WORKDIR /opt/odoo/sources
 RUN git clone https://github.com/OCA/OCB.git -b 7.0 odoo && \
-  rm -rf odoo/.git
+  cd odoo && \
+  git reset --hard b926ca3fcd6dbd0e0898b4b416708be517edfced && \
+  rm -rf .git
 
 # Execution environment
 USER 0

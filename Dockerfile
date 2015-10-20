@@ -52,8 +52,8 @@ ADD sources/pip-req.txt /opt/sources/pip-req.txt
 RUN pip install -r /opt/sources/pip-req.txt
 
 # SM: Install LESS
-RUN npm install -g less less-plugin-clean-css
-RUN ln -s /usr/bin/nodejs /usr/bin/node
+RUN npm install -g less less-plugin-clean-css && \
+  ln -s /usr/bin/nodejs /usr/bin/node
 
 # must unzip this package to make it visible as an odoo external dependency
 RUN easy_install -UZ py3o.template

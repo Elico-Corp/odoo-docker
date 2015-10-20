@@ -21,7 +21,7 @@ MarkupSafe==0.23
 #mercurial==3.0.1
 mock==1.0.1
 passlib==1.6.2
-Pillow==2.5.3
+Pillow==2.9.0
 pip==1.5.6
 psutil==2.1.1
 psycogreen==1.0

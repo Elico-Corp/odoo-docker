@@ -28,9 +28,9 @@ RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main" > /etc/
     python-zsi \
     python-lasso \
     libzmq3 \
-    # SM: libpq-dev is needed to install pg_config which is required by psycopg2
+    # libpq-dev is needed to install pg_config which is required by psycopg2
     libpq-dev \
-    # SM: These libraries are needed to install the pip modules
+    # These libraries are needed to install the pip modules
     python-dev \
     libffi-dev \
     libxml2-dev \
@@ -38,9 +38,9 @@ RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main" > /etc/
     libldap2-dev \
     libsasl2-dev \
     libssl-dev \
-    # SM: This library is necessary to upgrade PIL/pillow module
+    # This library is necessary to upgrade PIL/pillow module
     libjpeg8-dev \
-    # SM: Git is required to clone Odoo OCB project
+    # Git is required to clone Odoo OCB project
     git
 
 # Install Odoo python dependencies

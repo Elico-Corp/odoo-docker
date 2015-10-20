@@ -47,9 +47,6 @@ ADD sources/pip-req.txt /opt/sources/pip-req.txt
 # SM: Install Odoo python dependencies
 RUN pip install -r /opt/sources/pip-req.txt
 
-# SM: Upgrade pillow to allow JPEG resize operations (used by demo data)
-RUN pip install -i --upgrade pillow
-
 # must unzip this package to make it visible as an odoo external dependency
 RUN easy_install -UZ py3o.template
 

@@ -52,9 +52,6 @@ ADD sources/pip-req.txt /opt/sources/pip-req.txt
 # SM: Install Odoo python dependencies
 RUN pip install -r /opt/sources/pip-req.txt
 
-# SM: Upgrade pillow to allow JPEG resize operations (used by demo data)
-RUN pip install -i --upgrade pillow
-
 # SM: Install LESS
 RUN npm install -g less less-plugin-clean-css
 RUN ln -s /usr/bin/nodejs /usr/bin/node

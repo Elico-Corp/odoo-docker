@@ -1,4 +1,4 @@
-FROM elicocorp/odoo:8.0
+FROM elicocorp/odoo:9.0
 MAINTAINER Elico-Corp <contact@elico-corp.com>
 
 # Ubuntu CN mirror

@@ -14,4 +14,4 @@ RUN apt-get update && \
   apt-get -y install ttf-wqy-zenhei
 
 # Google links CN mirror
-RUN sed -i "s/fonts\.googleapis\.com/fonts.lug.ustc.edu.cn/g" `grep 'fonts.googleapis.com' -rl /opt/odoo/sources/odoo/addons`
+RUN sed -i "s/fonts\.googleapis\.com/fonts.lug.ustc.edu.cn/g" `grep 'fonts\.googleapis\.com' -rl /opt/odoo/sources/odoo/addons`

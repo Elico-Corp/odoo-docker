@@ -15,10 +15,11 @@ Jinja2==2.7.3
 lxml==3.4.1
 Mako==1.0.0
 MarkupSafe==0.23
-#mercurial==3.0.1
 mock==1.0.1
+msgpack_python==0.4.6
+ofxparse==0.14
 passlib==1.6.2
-Pillow==2.5.3
+Pillow==2.9.0
 pip==1.5.6
 psutil==2.1.1
 psycogreen==1.0
@@ -30,6 +31,7 @@ pyOpenSSL==0.14
 pyparsing==1.5.7
 pyPdf==1.13
 pyserial==2.7
+Python-Chart==1.39
 python_dateutil==1.5
 python_ldap==2.4.15
 python_openid==2.2.5
@@ -38,6 +40,7 @@ pytz==2014.10
 pyusb==1.0.0b1
 PyWebDAV==0.9.4.1
 PyYAML==3.11
+pyzmq==14.6.0
 qrcode==5.0.1
 reportlab==3.1.8
 requests==2.3.0
@@ -48,7 +51,8 @@ suds==0.4
 unittest2==0.5.1
 vatnumber==1.2
 vobject==0.6.6
-Werkzeug==0.8.3
+Werkzeug==0.10.4
 wheel==0.24.0
 wsgiref==0.1.2
 xlwt==0.7.5
+zmq_rpc==0.1

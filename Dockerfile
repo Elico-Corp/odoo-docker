@@ -69,7 +69,7 @@ RUN /bin/bash -c "mkdir -p /opt/odoo/var/{run,log,egg-cache}"
 WORKDIR /opt/odoo/sources
 RUN git clone https://github.com/OCA/OCB.git -b 8.0 odoo && \
   cd odoo && \
-  git reset --hard cd7d2128fefae2f987fa0782119810a1400a2b65 && \
+  git reset --hard 4bd2f1eac7616eaea3982eae35983f4f1086949e && \
   rm -rf .git
 
 # Execution environment

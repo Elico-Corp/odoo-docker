@@ -69,8 +69,10 @@ class Repo(object):
         # if just download
         if self.path in addons_path:
             return
+        # Todo manage update of repo
         if os.path.exists(self.path):
-            call(self.update_cmd)
+            # call(self.update_cmd)
+            pass
         else:
             call(self.download_cmd)
         addons_path.append(self.path)

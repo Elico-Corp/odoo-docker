@@ -71,7 +71,7 @@ RUN /bin/bash -c "mkdir -p /opt/odoo/var/{run,log,egg-cache}"
 
 # SM: Add Odoo OCB sources (remove .git folder to reduce image size)
 WORKDIR /opt/odoo/sources
-RUN git clone https://github.com/OCA/OCB.git -b 8.0 odoo && \
+RUN git clone https://github.com/OCA/OCB.git -b 7.0 odoo && \
        rm -rf odoo/.git
 
 # Execution environment
@@ -87,3 +87,5 @@ CMD ["help"]
 # Expose the odoo ports (for linked containers)
 EXPOSE 8069 8072
 ADD bin /app/bin/
+RUN pip install magento unidecode
+

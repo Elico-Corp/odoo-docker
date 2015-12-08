@@ -75,11 +75,14 @@ RUN git clone https://github.com/OCA/OCB.git -b 8.0 odoo && \
 # Execution environment
 USER 0
 ADD sources/odoo.conf /opt/sources/odoo.conf
+ADD scripts /mnt/scripts
+RUN mkdir /mnt/ssh
 WORKDIR /app
-VOLUME ["/opt/odoo/var", "/opt/odoo/etc", "/opt/odoo/additional_addons", "/opt/odoo/data"]
+VOLUME ["/opt/odoo/var", "/opt/odoo/etc", "/opt/odoo/additional_addons", "/opt/odoo/data". "/mnt/scripts/", "/mnt/ssh"]
 # Set the default entrypoint (non overridable) to run when starting the container
 ENTRYPOINT ["/app/bin/boot"]
 CMD ["help"]
 # Expose the odoo ports (for linked containers)
 EXPOSE 8069 8072
 ADD bin /app/bin/
+RUN pip install magento unidecode

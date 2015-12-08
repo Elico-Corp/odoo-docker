@@ -85,4 +85,3 @@ CMD ["help"]
 # Expose the odoo ports (for linked containers)
 EXPOSE 8069 8072
 ADD bin /app/bin/
-RUN pip install magento unidecode

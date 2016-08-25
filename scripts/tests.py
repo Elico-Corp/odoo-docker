@@ -25,59 +25,149 @@ from addons import Repo
 
 class RepoTest(unittest.TestCase):
 
-    def test_short_name(self):
-        repo = Repo('Elico-Corp/odoo:8.0')
-        self.assertEqual('odoo', repo.short_name)
+    def test_check_is_url(self):
+        dependent = 'connector'
+        self.repo = Repo(dependent)
+        self.assertTrue(self.repo._check_is_url('https://github.com'))
+        self.assertTrue(self.repo._check_is_url('http://github.com'))
+        self.assertFalse(self.repo._check_is_url('ttps://github.com'))
 
-    def test_get_project(self):
-        repo = Repo('Elico-Corp/odoo:8.0')
-        self.assertEqual('Elico-Corp/odoo', repo.project)
+    def test_parse_oca_repo(self):
+        dependent = 'connector'
+        self.repo = Repo(dependent)
+        self.repo._parse_organization_repo(dependent)
+        self.assertEquals(self.repo.dependent, dependent)
+        self.assertEquals(self.repo.organization, 'OCA')
+        self.assertEquals(self.repo.repository, 'connector')
+        self.assertEquals(self.repo.short_dependent, 'connector')
 
-    def test_get_organization(self):
-        repo = Repo('Elico-Corp/odoo:8.0')
-        self.assertEqual('Elico-Corp', repo.organization)
+    def test_parse_organization_and_repo(self):
+        dependent = 'OCA/connector'
+        self.repo = Repo(dependent)
+        self.repo._parse_organization_repo(dependent)
+        self.assertEquals(self.repo.dependent, dependent)
+        self.assertEquals(self.repo.organization, 'OCA')
+        self.assertEquals(self.repo.repository, 'connector')
+        self.assertEquals(self.repo.short_dependent, 'connector')
 
-    def test_get_tag(self):
-        repo = Repo('Elico-Corp/odoo:8.0')
-        self.assertEqual('8.0', repo.tag)
+    def test_parse_url(self):
+        dependent = 'https://github.com/OCA/connector'
+        self.repo = Repo(dependent)
+        self.repo._parse_url(dependent)
+        self.assertEquals(self.repo.dependent, dependent)
+        self.assertEquals(self.repo.organization, 'OCA')
+        self.assertEquals(self.repo.repository, 'connector')
+        self.assertEquals(self.repo.short_dependent, 'connector')
+        self.assertEquals(self.repo.git_repo_host, 'github.com')
 
-    def test_get_tag_when_no_tag(self):
-        repo = Repo('Elico-Corp/odoo')
-        self.assertEqual('master', repo.tag)
+    def test_path(self):
+        dependent = 'connector'
+        self.repo = Repo(dependent)
+        self.assertEquals(self.repo.path, '/mnt/data/additional_addons/connector')
+
+    def test_repo_oca_repo(self):
+        dependent = 'connector'
+        self.repo = Repo(dependent)
+        self.assertEquals(self.repo.dependent, dependent)
+        self.assertEquals(self.repo.short_dependent, 'connector')
+        self.assertEquals(self.repo.branch, None)
+        self.assertEquals(self.repo.organization, 'OCA')
+        self.assertEquals(self.repo.repository, 'connector')
+        self.assertEquals(self.repo.git_repo_host, 'github.com')
+        self.assertEquals(self.repo.path, '/mnt/data/additional_addons/connector')
+
+    def test_repo_organization_and_repo(self):
+        dependent = 'OCA/connector'
+        self.repo = Repo(dependent)
+        self.assertEquals(self.repo.dependent, dependent)
+        self.assertEquals(self.repo.short_dependent, 'connector')
+        self.assertEquals(self.repo.branch, None)
+        self.assertEquals(self.repo.organization, 'OCA')
+        self.assertEquals(self.repo.repository, 'connector')
+        self.assertEquals(self.repo.git_repo_host, 'github.com')
+        self.assertEquals(self.repo.path, '/mnt/data/additional_addons/connector')
+
+    def test_repo_url(self):
+        dependent = 'https://github.com/OCA/connector'
+        self.repo = Repo(dependent)
+        self.assertEquals(self.repo.dependent, dependent)
+        self.assertEquals(self.repo.short_dependent, 'connector')
+        self.assertEquals(self.repo.branch, None)
+        self.assertEquals(self.repo.organization, 'OCA')
+        self.assertEquals(self.repo.repository, 'connector')
+        self.assertEquals(self.repo.git_repo_host, 'github.com')
+        self.assertEquals(self.repo.path, '/mnt/data/additional_addons/connector')
+
+    def test_repo_oca_repo_and_branch(self):
+        dependent = 'connector 8.0'
+        self.repo = Repo(dependent)
+        self.assertEquals(self.repo.dependent, dependent)
+        self.assertEquals(self.repo.short_dependent, 'connector')
+        self.assertEquals(self.repo.branch, '8.0')
+        self.assertEquals(self.repo.organization, 'OCA')
+        self.assertEquals(self.repo.repository, 'connector')
+        self.assertEquals(self.repo.git_repo_host, 'github.com')
+        self.assertEquals(self.repo.path, '/mnt/data/additional_addons/connector')
+
+    def test_repo_organization_and_repo_and_branch(self):
+        dependent = 'OCA/connector 8.0'
+        self.repo = Repo(dependent)
+        self.assertEquals(self.repo.dependent, dependent)
+        self.assertEquals(self.repo.short_dependent, 'connector')
+        self.assertEquals(self.repo.branch, '8.0')
+        self.assertEquals(self.repo.organization, 'OCA')
+        self.assertEquals(self.repo.repository, 'connector')
+        self.assertEquals(self.repo.git_repo_host, 'github.com')
+        self.assertEquals(self.repo.path, '/mnt/data/additional_addons/connector')
+
+    def test_repo_url_and_branch(self):
+        dependent = 'https://github.com/OCA/connector 8.0'
+        self.repo = Repo(dependent)
+        self.assertEquals(self.repo.dependent, dependent)
+        self.assertEquals(self.repo.short_dependent, 'connector')
+        self.assertEquals(self.repo.branch, '8.0')
+        self.assertEquals(self.repo.organization, 'OCA')
+        self.assertEquals(self.repo.repository, 'connector')
+        self.assertEquals(self.repo.git_repo_host, 'github.com')
+        self.assertEquals(self.repo.path, '/mnt/data/additional_addons/connector')
+
+    def test_repo_rename_and_url(self):
+        dependent = 'connector_rename https://github.com/OCA/connector'
+        self.repo = Repo(dependent)
+        self.assertEquals(self.repo.dependent, dependent)
+        self.assertEquals(self.repo.short_dependent, 'connector_rename')
+        self.assertEquals(self.repo.branch, None)
+        self.assertEquals(self.repo.organization, 'OCA')
+        self.assertEquals(self.repo.repository, 'connector')
+        self.assertEquals(self.repo.git_repo_host, 'github.com')
+        self.assertEquals(self.repo.path, '/mnt/data/additional_addons/connector_rename')
+
+    def test_repo_rename_and_url_and_branch(self):
+        dependent = 'connector_rename https://github.com/OCA/connector 8.0'
+        self.repo = Repo(dependent)
+        self.assertEquals(self.repo.dependent, dependent)
+        self.assertEquals(self.repo.short_dependent, 'connector_rename')
+        self.assertEquals(self.repo.branch, '8.0')
+        self.assertEquals(self.repo.organization, 'OCA')
+        self.assertEquals(self.repo.repository, 'connector')
+        self.assertEquals(self.repo.git_repo_host, 'github.com')
+        self.assertEquals(self.repo.path, '/mnt/data/additional_addons/connector_rename')
 
     def test_download_cmd(self):
         repo = Repo('Elico-Corp/odoo')
         self.assertEqual(
-            ['git', 'clone', '-b', 'master', '--depth', '1',
-             'git@github.com:Elico-Corp/odoo.git',
+            ['git', 'clone',
+             'https://github.com/Elico-Corp/odoo.git',
              '/mnt/data/additional_addons/odoo'],
             repo.download_cmd)
 
-    def test_update_cmd(self):
-        repo = Repo('Elico-Corp/odoo:8.0')
+    def test_download_cmd_with_branch(self):
+        repo = Repo('Elico-Corp/odoo 8.0')
         self.assertEqual(
-            ['cd', '/mnt/data/additional_addons/odoo', '&&', 'git', 'pull',
-             'origin', '8.0', '&&', 'cd', '-'],
-            repo.update_cmd)
-
-    def test_path(self):
-        repo = Repo('Elico-Corp/odoo:8.0')
-        self.assertEqual('/mnt/data/additional_addons/odoo', repo.path)
-
-    def test_dependency_link(self):
-        repo = Repo('Elico-Corp/odoo:8.0')
-        link = 'account-financial-reporting\
- https://github.com/OCA/account-financial-reporting 8.0'
-        self.assertEqual(
-            'OCA/account-financial-reporting:8.0',
-            repo.clean_dependency_link(link))
-
-    def test_dependency_link_organization(self):
-        repo = Repo('Elico-Corp/odoo:8.0')
-        link = 'connector'
-        self.assertEqual(
-            'Elico-Corp/connector:8.0',
-            repo.clean_dependency_link(link))
+            ['git', 'clone', '-b', '8.0',
+             'https://github.com/Elico-Corp/odoo.git',
+             '/mnt/data/additional_addons/odoo'],
+            repo.download_cmd)
 
 if __name__ == '__main__':
     unittest.main()

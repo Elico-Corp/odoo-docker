@@ -20,97 +20,211 @@
 #
 ##############################################################################
 import os
+import re
+from urlparse import urlparse
 from subprocess import call
+from subprocess import check_output
 
 DOWNLOAD_PATH = '/mnt/data/additional_addons/'
 ODOO_CONF = '/opt/odoo/etc/odoo.conf'
-addons_path = ['/opt/odoo/sources/odoo/addons']
+ADDONS_PATH = ['/opt/odoo/sources/odoo/addons']
+SCHEME = 'https://'
+GIT_REPOSITORY_HOSTING_SERVICE = 'github.com'
+DEFAULT_ORGANIZATION = 'OCA'
 
 
 class Repo(object):
-    def __init__(self, name):
-        self.name = name
+    """
+    oca_dependencies.txt
+
+    For public repo:
+
+    oca-repo -> https://github.com/OCA/oca-repo (branch: master)
+    oca-repo 8.0 -> https://github.com/OCA/oca-repo (branch: 8.0)
+    organization/public-repo -> https://github.com/organization/public-repo (branch: master)
+    organization/public-repo 8.0 -> https://github.com/organization/public-repo (branch: 8.0)
+    https://github.com/organization/public-repo -> https://github.com/organization/public-repo (branch: master)
+    https://github.com/organization/public-repo 8.0 -> https://github.com/organization/public-repo (branch: 8.0)
+    public-repo_rename https://github.com/organization/public-repo -> https://github.com/organization/public-repo (branch: master)
+    public-repo_rename https://github.com/organization/public-repo 8.0 -> https://github.com/organization/public-repo (branch: 8.0)
+
+    For private repo:
+
+    git@github.com:Elico-Corp/private_repo
+    git@github.com:Elico-Corp/private_repo 8.0
+    private_repo_rename git@github.com:Elico-Corp/private-repo
+    private_repo_rename git@github.com:Elico-Corp/private_repo 8.0
+
+    """
+    def __init__(self, dependent):
+        self.dependent = dependent
+        self.short_dependent = None
+        self.branch = None
+        self.organization = DEFAULT_ORGANIZATION
+        self.repository = None
+        self.scheme = SCHEME
+        self.git_repo_host = GIT_REPOSITORY_HOSTING_SERVICE
+        self._parse()
+
+    def _check_is_ssh(self, url):
+        if url.startswith('git@github.com:'):
+            self.scheme = 'git@'
+            self.git_repo_host = 'github.com:'
+            return True
+
+    def _check_is_url(self, url):
+        if re.match(r'^https?:/{2}\w.+$', url):
+            return True
+        else:
+            if self._check_is_ssh(url):
+                return True
+            return False
+
+    def _parse_organization_repo(self, dependent):
+        _args = dependent.split('/')
+        _len_args = len(_args)
+        if _len_args == 1:
+            self.repository = _args[0]
+            self.short_dependent = self.repository
+        elif _len_args == 2:
+            self.organization = _args[0]
+            self.repository = _args[1]
+            self.short_dependent = self.repository
+
+    def _parse_url(self, url):
+        if self.scheme == SCHEME:
+            _url_parse = urlparse(url)
+            self.git_repo_host = _url_parse.netloc
+            _args_path = _url_parse.path.split('/')
+            self.organization = _args_path[1]
+            self.repository = _args_path[2].replace('.git', '')
+            self.short_dependent = self.repository
+        elif self.scheme == 'git@':
+            _args = url.split(':')[1]
+            _args_path = _args.split('/')
+            self.organization = _args_path[0]
+            self.repository = _args_path[1].replace('.git', '')
+            self.short_dependent = self.repository
+
+    def _parse(self):
+        _dependent = self.dependent
+        _args = _dependent.split(' ')
+        _len_args = len(_args)
+        if _len_args == 1:
+            if self._check_is_url(_args[0]):
+                # url
+                self._parse_url(_args[0])
+            else:
+                # repo OR organization/repo
+                self._parse_organization_repo(_args[0])
+        elif _len_args == 2:
+            if self._check_is_url(_args[0]):
+                # url AND branch
+                self._parse_url(_args[0])
+                self.branch = _args[1]
+            else:
+                if self._check_is_url(_args[1]):
+                    # repo AND url
+                    self._parse_url(_args[1])
+                    self.short_dependent = _args[0]
+                else:
+                    # repo OR organization/repo AND branch
+                    self._parse_organization_repo(_args[0])
+                    self.branch = _args[1]
+        elif _len_args == 3:
+            if self._check_is_url(_args[1]):
+                # repo OR organization/repo AND url AND branch
+                self._parse_organization_repo(_args[0])
+                self._parse_url(_args[1])
+                self.branch = _args[2]
+                self.short_dependent = _args[0]
 
     @property
-    def short_name(self):
-        return self.name.partition('/')[-1].partition(':')[0]
+    def path(self):
+        return '%s%s' % (DOWNLOAD_PATH, self.short_dependent)
 
     @property
-    def tag(self):
-        _tag = self.name.partition(':')[-1]
-        if _tag:
-            return _tag
-        return 'master'
-
-    @property
-    def project(self):
-        return self.name.partition(':')[0]
-
-    @property
-    def organization(self):
-        return self.project.split('/')[0]
+    def resolve_url(self):
+        _resolve_url = '%s%s/%s/%s.git' % (
+            self.scheme,
+            self.git_repo_host,
+            self.organization,
+            self.repository
+        )
+        return _resolve_url
 
     @property
     def download_cmd(self):
-        cmd = 'git clone -b %s --depth 1 git@github.com:%s.git %s' % (
-            self.tag, self.project, self.path)
+        if self.branch:
+            cmd = 'git clone -b %s %s %s' % (
+                self.branch, self.resolve_url, self.path
+            )
+        else:
+            cmd = 'git clone %s %s' % (
+                self.resolve_url, self.path
+            )
         return cmd.split()
 
     @property
     def update_cmd(self):
-        cmd = 'cd %s && git pull origin %s && cd -' % (self.path, self.tag)
-        return cmd.split()
-
-    @property
-    def path(self):
-        return '%s%s' % (DOWNLOAD_PATH, self.short_name)
+        if self.branch:
+            cmd = 'git --git-dir=%s/.git --work-tree=%s pull origin %s' % (
+                self.path, self.path, self.branch
+            )
+            return cmd.split()
+        else:
+            branch_cmd = 'git --git-dir=%s/.git --work-tree=%s branch' % (
+                self.path, self.path
+            )
+            output = check_output(branch_cmd, shell=True)
+            for line in output.split('\n'):
+                if line.startswith('*'):
+                    self.branch = line.replace('* ', '')
+                    cmd = 'git --git-dir=%s/.git --work-tree=%s pull origin %s' % (
+                        self.path, self.path, self.branch
+                    )
+                    return cmd.split()
 
     def download(self):
-        # if just download
-        if self.path in addons_path:
+        if self.path in ADDONS_PATH:
             return
-        # Todo manage update of repo
         if os.path.exists(self.path):
-            # call(self.update_cmd)
-            pass
+            print('PULL: %s' % (self.path,))
+            cmd = self.update_cmd
+            call(cmd)
         else:
+            print('CLONE: %s' % (self.path, ))
             call(self.download_cmd)
-        addons_path.append(self.path)
+        ADDONS_PATH.append(self.path)
         self.download_dependency()
 
     def download_dependency(self):
         filename = '%s/oca_dependencies.txt' % self.path
         if not os.path.exists(filename):
             return
-        links = []
+        repo_list = []
         with open(filename) as f:
             for line in f:
                 l = line.strip('\n').strip()
                 if l.startswith('#') or not l:
                     continue
-                links.append(self.clean_dependency_link(l))
+                repo_list.append(Repo(l))
         f.close()
-        for link in links:
-            Repo(link).download()
-
-    def clean_dependency_link(self, link):
-        if len(link.split()) == 1:
-            # if it's an organization repo
-            return '%s/%s:%s' % (self.organization, link, self.tag)
-        return link.split('github.com/')[-1].replace(' ', ':')
+        for repo in repo_list:
+            repo.download()
 
 
 def write_addons_path():
     with open(ODOO_CONF, 'a') as f:
-        f.write('addons_path = %s' % ','.join(list(set(addons_path))))
+        f.write('addons_path = %s' % ','.join(list(set(ADDONS_PATH))))
     f.close()
 
 
 def main():
-    name = os.environ.get('GITHUB_REPO')
-    if name:
-        print name
-        Repo(name).download()
+    dependent = os.environ.get('ADDONS_REPO')
+    if dependent:
+        print('dependent: %s ' % (dependent, ))
+        Repo(dependent).download()
     write_addons_path()
 
 if __name__ == '__main__':

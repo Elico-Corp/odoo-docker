@@ -37,11 +37,14 @@ function start {
         sed -i "s/_DB_PASSWORD_/$DB_PASSWORD/g" /opt/odoo/etc/odoo.conf
     fi
 
-    if [ "$GITHUB_REPO" ]; then
+    if [ "$ADDONS_REPO" ]; then
         echo "Setting up SSH key"
         cp -R /mnt/ssh /root/.ssh
         chown -R $USER:$USER /root/.ssh
-        chmod 600 /root/.ssh/id_rsa
+        ssh_file="/root/.ssh/id_rsa"
+        if [ -f "$ssh_file" ]; then
+            chmod 600 /root/.ssh/id_rsa
+        fi
         ssh-keyscan github.com  >> /root/.ssh/known_hosts
         echo "Downloading additional addons..."
         python /mnt/scripts/addons.py
@@ -81,10 +84,11 @@ then
 else
     file=$ODOO_CONF
 fi
-if [ ! -f "$file" ]; then
-    cp /opt/sources/odoo.conf $file 
-    echo "Copy template as conf file $file"
+if [ -f "$file" ]; then
+    rm $file
 fi
+cp /opt/sources/odoo.conf $file
+echo "Copy template as conf file $file"
 chown -R odoo /opt/odoo
 echo "Running command..."
 for arg in "$*"

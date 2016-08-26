@@ -74,6 +74,18 @@ class Repo(object):
                 return True
             return False
 
+    def get_branch_name(self):
+        if self.branch:
+            return self.branch
+        else:
+            branch_cmd = 'git --git-dir=%s/.git --work-tree=%s branch' % (
+                self.path, self.path
+            )
+            output = check_output(branch_cmd, shell=True)
+            for line in output.split('\n'):
+                if line.startswith('*'):
+                    self._set_branch(line.replace('* ', ''))
+
     def _parse_organization_repo(self, dependent):
         _args = dependent.split('/')
         _len_args = len(_args)
@@ -169,17 +181,11 @@ class Repo(object):
             )
             return cmd.split()
         else:
-            branch_cmd = 'git --git-dir=%s/.git --work-tree=%s branch' % (
-                self.path, self.path
+            self.get_branch_name()
+            cmd = 'git --git-dir=%s/.git --work-tree=%s pull origin %s' % (
+                self.path, self.path, self.branch
             )
-            output = check_output(branch_cmd, shell=True)
-            for line in output.split('\n'):
-                if line.startswith('*'):
-                    self._set_branch(line.replace('* ', ''))
-                    cmd = 'git --git-dir=%s/.git --work-tree=%s pull origin %s' % (
-                        self.path, self.path, self.branch
-                    )
-                    return cmd.split()
+            return cmd.split()
 
     def download(self):
         if self.path in ADDONS_PATH:
@@ -191,7 +197,7 @@ class Repo(object):
         else:
             print('CLONE: %s %s' % (self.path, self.branch))
             call(self.download_cmd)
-            # TODO update branch if it's empty
+            self.get_branch_name()
         ADDONS_PATH.append(self.path)
         self.download_dependency()
 

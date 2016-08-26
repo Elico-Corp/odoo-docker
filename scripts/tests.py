@@ -153,6 +153,17 @@ class RepoTest(unittest.TestCase):
         self.assertEquals(self.repo.git_repo_host, 'github.com')
         self.assertEquals(self.repo.path, '/mnt/data/additional_addons/connector_rename')
 
+    def test_repo_rename_and_url_and_branch_new(self):
+        dependent = 'account-financial-reporting https://github.com/OCA/account-financial-reporting 8.0'
+        self.repo = Repo(dependent)
+        self.assertEquals(self.repo.dependent, dependent)
+        self.assertEquals(self.repo.short_dependent, 'account-financial-reporting')
+        self.assertEquals(self.repo.branch, '8.0')
+        self.assertEquals(self.repo.organization, 'OCA')
+        self.assertEquals(self.repo.repository, 'account-financial-reporting')
+        self.assertEquals(self.repo.git_repo_host, 'github.com')
+        self.assertEquals(self.repo.path, '/mnt/data/additional_addons/account-financial-reporting')
+
     def test_download_cmd(self):
         repo = Repo('Elico-Corp/odoo')
         self.assertEqual(

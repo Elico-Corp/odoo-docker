@@ -56,15 +56,26 @@ class Repo(object):
     private_repo_rename git@github.com:Elico-Corp/private_repo 8.0
 
     """
-    def __init__(self, dependent):
+    def __init__(self, dependent, parent=None):
+        if parent:
+            self.parent = parent
+            self.branch = self.parent.branch
+        else:
+            self.parent = None
+            self.branch = None
         self.dependent = dependent
         self.short_dependent = None
-        self.branch = None
         self.organization = DEFAULT_ORGANIZATION
         self.repository = None
         self.scheme = SCHEME
         self.git_repo_host = GIT_REPOSITORY_HOSTING_SERVICE
         self._parse()
+
+    def _set_branch(self, branch):
+        if branch:
+            self.branch = branch
+        else:
+            self.branch = self.parent.branch
 
     def _check_is_ssh(self, url):
         if url.startswith('git@github.com:'):
@@ -121,7 +132,7 @@ class Repo(object):
             if self._check_is_url(_args[0]):
                 # url AND branch
                 self._parse_url(_args[0])
-                self.branch = _args[1]
+                self._set_branch(_args[1])
             else:
                 if self._check_is_url(_args[1]):
                     # repo AND url
@@ -130,13 +141,13 @@ class Repo(object):
                 else:
                     # repo OR organization/repo AND branch
                     self._parse_organization_repo(_args[0])
-                    self.branch = _args[1]
+                    self._set_branch(_args[1])
         elif _len_args == 3:
             if self._check_is_url(_args[1]):
                 # repo OR organization/repo AND url AND branch
                 self._parse_organization_repo(_args[0])
                 self._parse_url(_args[1])
-                self.branch = _args[2]
+                self._set_branch(_args[2])
                 self.short_dependent = _args[0]
 
     @property
@@ -179,7 +190,7 @@ class Repo(object):
             output = check_output(branch_cmd, shell=True)
             for line in output.split('\n'):
                 if line.startswith('*'):
-                    self.branch = line.replace('* ', '')
+                    self._set_branch(line.replace('* ', ''))
                     cmd = 'git --git-dir=%s/.git --work-tree=%s pull origin %s' % (
                         self.path, self.path, self.branch
                     )
@@ -189,12 +200,13 @@ class Repo(object):
         if self.path in ADDONS_PATH:
             return
         if os.path.exists(self.path):
-            print('PULL: %s' % (self.path,))
+            print('PULL: %s %s' % (self.path, self.branch))
             cmd = self.update_cmd
             call(cmd)
         else:
-            print('CLONE: %s' % (self.path, ))
+            print('CLONE: %s %s' % (self.path, self.branch))
             call(self.download_cmd)
+            # TODO update branch if it's empty
         ADDONS_PATH.append(self.path)
         self.download_dependency()
 
@@ -208,7 +220,7 @@ class Repo(object):
                 l = line.strip('\n').strip()
                 if l.startswith('#') or not l:
                     continue
-                repo_list.append(Repo(l))
+                repo_list.append(Repo(l, self))
         f.close()
         for repo in repo_list:
             repo.download()

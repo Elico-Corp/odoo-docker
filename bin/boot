@@ -83,6 +83,7 @@ then
 else
     file=$ODOO_CONF
 fi
+# TODO more test case make sure this compatible with our current infra
 if [ -f "$file" ]; then
     rm $file
 fi

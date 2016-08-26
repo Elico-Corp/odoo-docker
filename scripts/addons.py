@@ -60,6 +60,7 @@ class Repo(object):
             self.branch = self.parent.branch
 
     def _check_is_ssh(self, url):
+        # TODO For other hosting services, this part should be dynamic.
         if url.startswith('git@github.com:'):
             self.scheme = 'git@'
             self.git_repo_host = 'github.com:'
@@ -77,9 +78,11 @@ class Repo(object):
         _args = dependent.split('/')
         _len_args = len(_args)
         if _len_args == 1:
+            # repo
             self.repository = _args[0]
             self.short_dependent = self.repository
         elif _len_args == 2:
+            # organization AND repo
             self.organization = _args[0]
             self.repository = _args[1]
             self.short_dependent = self.repository

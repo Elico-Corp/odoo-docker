@@ -2,7 +2,7 @@
 # Copyright 2015 Elico Corp
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 import unittest
-from addons import Repo
+from addons import *
 
 
 class RepoTest(unittest.TestCase):
@@ -19,7 +19,7 @@ class RepoTest(unittest.TestCase):
         self.repo = Repo(dependent)
         self.repo._parse_organization_repo(dependent)
         self.assertEquals(self.repo.dependent, dependent)
-        self.assertEquals(self.repo.organization, 'OCA')
+        self.assertEquals(self.repo.organization, DEFAULT_ORGANIZATION)
         self.assertEquals(self.repo.repository, 'connector')
         self.assertEquals(self.repo.short_dependent, 'connector')
 
@@ -28,7 +28,7 @@ class RepoTest(unittest.TestCase):
         self.repo = Repo(dependent)
         self.repo._parse_organization_repo(dependent)
         self.assertEquals(self.repo.dependent, dependent)
-        self.assertEquals(self.repo.organization, 'OCA')
+        self.assertEquals(self.repo.organization, DEFAULT_ORGANIZATION)
         self.assertEquals(self.repo.repository, 'connector')
         self.assertEquals(self.repo.short_dependent, 'connector')
 
@@ -37,7 +37,7 @@ class RepoTest(unittest.TestCase):
         self.repo = Repo(dependent)
         self.repo._parse_url(dependent)
         self.assertEquals(self.repo.dependent, dependent)
-        self.assertEquals(self.repo.organization, 'OCA')
+        self.assertEquals(self.repo.organization, DEFAULT_ORGANIZATION)
         self.assertEquals(self.repo.repository, 'connector')
         self.assertEquals(self.repo.short_dependent, 'connector')
         self.assertEquals(self.repo.git_repo_host, 'github.com')
@@ -45,7 +45,7 @@ class RepoTest(unittest.TestCase):
     def test_path(self):
         dependent = 'connector'
         self.repo = Repo(dependent)
-        self.assertEquals(self.repo.path, '/mnt/data/additional_addons/connector')
+        self.assertEquals(self.repo.path, '%sconnector' % (EXTRA_ADDONS_PATH, ))
 
     def test_repo_oca_repo(self):
         dependent = 'connector'
@@ -53,10 +53,10 @@ class RepoTest(unittest.TestCase):
         self.assertEquals(self.repo.dependent, dependent)
         self.assertEquals(self.repo.short_dependent, 'connector')
         self.assertEquals(self.repo.branch, None)
-        self.assertEquals(self.repo.organization, 'OCA')
+        self.assertEquals(self.repo.organization, DEFAULT_ORGANIZATION)
         self.assertEquals(self.repo.repository, 'connector')
         self.assertEquals(self.repo.git_repo_host, 'github.com')
-        self.assertEquals(self.repo.path, '/mnt/data/additional_addons/connector')
+        self.assertEquals(self.repo.path, '%sconnector' % (EXTRA_ADDONS_PATH, ))
 
     def test_repo_organization_and_repo(self):
         dependent = 'OCA/connector'
@@ -64,10 +64,10 @@ class RepoTest(unittest.TestCase):
         self.assertEquals(self.repo.dependent, dependent)
         self.assertEquals(self.repo.short_dependent, 'connector')
         self.assertEquals(self.repo.branch, None)
-        self.assertEquals(self.repo.organization, 'OCA')
+        self.assertEquals(self.repo.organization, DEFAULT_ORGANIZATION)
         self.assertEquals(self.repo.repository, 'connector')
         self.assertEquals(self.repo.git_repo_host, 'github.com')
-        self.assertEquals(self.repo.path, '/mnt/data/additional_addons/connector')
+        self.assertEquals(self.repo.path, '%sconnector' % (EXTRA_ADDONS_PATH, ))
 
     def test_repo_url(self):
         dependent = 'https://github.com/OCA/connector'
@@ -75,10 +75,10 @@ class RepoTest(unittest.TestCase):
         self.assertEquals(self.repo.dependent, dependent)
         self.assertEquals(self.repo.short_dependent, 'connector')
         self.assertEquals(self.repo.branch, None)
-        self.assertEquals(self.repo.organization, 'OCA')
+        self.assertEquals(self.repo.organization, DEFAULT_ORGANIZATION)
         self.assertEquals(self.repo.repository, 'connector')
         self.assertEquals(self.repo.git_repo_host, 'github.com')
-        self.assertEquals(self.repo.path, '/mnt/data/additional_addons/connector')
+        self.assertEquals(self.repo.path, '%sconnector' % (EXTRA_ADDONS_PATH, ))
 
     def test_repo_oca_repo_and_branch(self):
         dependent = 'connector 8.0'
@@ -86,10 +86,10 @@ class RepoTest(unittest.TestCase):
         self.assertEquals(self.repo.dependent, dependent)
         self.assertEquals(self.repo.short_dependent, 'connector')
         self.assertEquals(self.repo.branch, '8.0')
-        self.assertEquals(self.repo.organization, 'OCA')
+        self.assertEquals(self.repo.organization, DEFAULT_ORGANIZATION)
         self.assertEquals(self.repo.repository, 'connector')
         self.assertEquals(self.repo.git_repo_host, 'github.com')
-        self.assertEquals(self.repo.path, '/mnt/data/additional_addons/connector')
+        self.assertEquals(self.repo.path, '%sconnector' % (EXTRA_ADDONS_PATH, ))
 
     def test_repo_organization_and_repo_and_branch(self):
         dependent = 'OCA/connector 8.0'
@@ -97,10 +97,10 @@ class RepoTest(unittest.TestCase):
         self.assertEquals(self.repo.dependent, dependent)
         self.assertEquals(self.repo.short_dependent, 'connector')
         self.assertEquals(self.repo.branch, '8.0')
-        self.assertEquals(self.repo.organization, 'OCA')
+        self.assertEquals(self.repo.organization, DEFAULT_ORGANIZATION)
         self.assertEquals(self.repo.repository, 'connector')
         self.assertEquals(self.repo.git_repo_host, 'github.com')
-        self.assertEquals(self.repo.path, '/mnt/data/additional_addons/connector')
+        self.assertEquals(self.repo.path, '%sconnector' % (EXTRA_ADDONS_PATH, ))
 
     def test_repo_url_and_branch(self):
         dependent = 'https://github.com/OCA/connector 8.0'
@@ -108,10 +108,10 @@ class RepoTest(unittest.TestCase):
         self.assertEquals(self.repo.dependent, dependent)
         self.assertEquals(self.repo.short_dependent, 'connector')
         self.assertEquals(self.repo.branch, '8.0')
-        self.assertEquals(self.repo.organization, 'OCA')
+        self.assertEquals(self.repo.organization, DEFAULT_ORGANIZATION)
         self.assertEquals(self.repo.repository, 'connector')
         self.assertEquals(self.repo.git_repo_host, 'github.com')
-        self.assertEquals(self.repo.path, '/mnt/data/additional_addons/connector')
+        self.assertEquals(self.repo.path, '%sconnector' % (EXTRA_ADDONS_PATH, ))
 
     def test_repo_rename_and_url(self):
         dependent = 'connector_rename https://github.com/OCA/connector'
@@ -119,10 +119,10 @@ class RepoTest(unittest.TestCase):
         self.assertEquals(self.repo.dependent, dependent)
         self.assertEquals(self.repo.short_dependent, 'connector_rename')
         self.assertEquals(self.repo.branch, None)
-        self.assertEquals(self.repo.organization, 'OCA')
+        self.assertEquals(self.repo.organization, DEFAULT_ORGANIZATION)
         self.assertEquals(self.repo.repository, 'connector')
         self.assertEquals(self.repo.git_repo_host, 'github.com')
-        self.assertEquals(self.repo.path, '/mnt/data/additional_addons/connector_rename')
+        self.assertEquals(self.repo.path, '%sconnector_rename' % (EXTRA_ADDONS_PATH, ))
 
     def test_repo_rename_and_url_and_branch(self):
         dependent = 'connector_rename https://github.com/OCA/connector 8.0'
@@ -130,10 +130,10 @@ class RepoTest(unittest.TestCase):
         self.assertEquals(self.repo.dependent, dependent)
         self.assertEquals(self.repo.short_dependent, 'connector_rename')
         self.assertEquals(self.repo.branch, '8.0')
-        self.assertEquals(self.repo.organization, 'OCA')
+        self.assertEquals(self.repo.organization, DEFAULT_ORGANIZATION)
         self.assertEquals(self.repo.repository, 'connector')
         self.assertEquals(self.repo.git_repo_host, 'github.com')
-        self.assertEquals(self.repo.path, '/mnt/data/additional_addons/connector_rename')
+        self.assertEquals(self.repo.path, '%sconnector_rename' % (EXTRA_ADDONS_PATH, ))
 
     def test_repo_rename_and_url_and_branch_new(self):
         dependent = 'account-financial-reporting https://github.com/OCA/account-financial-reporting 8.0'
@@ -141,10 +141,10 @@ class RepoTest(unittest.TestCase):
         self.assertEquals(self.repo.dependent, dependent)
         self.assertEquals(self.repo.short_dependent, 'account-financial-reporting')
         self.assertEquals(self.repo.branch, '8.0')
-        self.assertEquals(self.repo.organization, 'OCA')
+        self.assertEquals(self.repo.organization, DEFAULT_ORGANIZATION)
         self.assertEquals(self.repo.repository, 'account-financial-reporting')
         self.assertEquals(self.repo.git_repo_host, 'github.com')
-        self.assertEquals(self.repo.path, '/mnt/data/additional_addons/account-financial-reporting')
+        self.assertEquals(self.repo.path, '%saccount-financial-reporting' % (EXTRA_ADDONS_PATH, ))
 
     def test_download_cmd(self):
         repo = Repo('Elico-Corp/odoo')

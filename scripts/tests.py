@@ -21,7 +21,7 @@ class RepoTest(unittest.TestCase):
         self.assertEquals(self.repo.dependent, dependent)
         self.assertEquals(self.repo.organization, DEFAULT_ORGANIZATION)
         self.assertEquals(self.repo.repository, 'connector')
-        self.assertEquals(self.repo.short_dependent, 'connector')
+        self.assertEquals(self.repo.folder_name, 'connector')
 
     def test_parse_organization_and_repo(self):
         dependent = 'OCA/connector'
@@ -30,7 +30,7 @@ class RepoTest(unittest.TestCase):
         self.assertEquals(self.repo.dependent, dependent)
         self.assertEquals(self.repo.organization, DEFAULT_ORGANIZATION)
         self.assertEquals(self.repo.repository, 'connector')
-        self.assertEquals(self.repo.short_dependent, 'connector')
+        self.assertEquals(self.repo.folder_name, 'connector')
 
     def test_parse_url(self):
         dependent = 'https://github.com/OCA/connector'
@@ -39,7 +39,7 @@ class RepoTest(unittest.TestCase):
         self.assertEquals(self.repo.dependent, dependent)
         self.assertEquals(self.repo.organization, DEFAULT_ORGANIZATION)
         self.assertEquals(self.repo.repository, 'connector')
-        self.assertEquals(self.repo.short_dependent, 'connector')
+        self.assertEquals(self.repo.folder_name, 'connector')
         self.assertEquals(self.repo.git_repo_host, 'github.com')
 
     def test_path(self):
@@ -51,7 +51,7 @@ class RepoTest(unittest.TestCase):
         dependent = 'connector'
         self.repo = Repo(dependent)
         self.assertEquals(self.repo.dependent, dependent)
-        self.assertEquals(self.repo.short_dependent, 'connector')
+        self.assertEquals(self.repo.folder_name, 'connector')
         self.assertEquals(self.repo.branch, None)
         self.assertEquals(self.repo.organization, DEFAULT_ORGANIZATION)
         self.assertEquals(self.repo.repository, 'connector')
@@ -62,7 +62,7 @@ class RepoTest(unittest.TestCase):
         dependent = 'OCA/connector'
         self.repo = Repo(dependent)
         self.assertEquals(self.repo.dependent, dependent)
-        self.assertEquals(self.repo.short_dependent, 'connector')
+        self.assertEquals(self.repo.folder_name, 'connector')
         self.assertEquals(self.repo.branch, None)
         self.assertEquals(self.repo.organization, DEFAULT_ORGANIZATION)
         self.assertEquals(self.repo.repository, 'connector')
@@ -73,7 +73,7 @@ class RepoTest(unittest.TestCase):
         dependent = 'https://github.com/OCA/connector'
         self.repo = Repo(dependent)
         self.assertEquals(self.repo.dependent, dependent)
-        self.assertEquals(self.repo.short_dependent, 'connector')
+        self.assertEquals(self.repo.folder_name, 'connector')
         self.assertEquals(self.repo.branch, None)
         self.assertEquals(self.repo.organization, DEFAULT_ORGANIZATION)
         self.assertEquals(self.repo.repository, 'connector')
@@ -84,7 +84,7 @@ class RepoTest(unittest.TestCase):
         dependent = 'connector 8.0'
         self.repo = Repo(dependent)
         self.assertEquals(self.repo.dependent, dependent)
-        self.assertEquals(self.repo.short_dependent, 'connector')
+        self.assertEquals(self.repo.folder_name, 'connector')
         self.assertEquals(self.repo.branch, '8.0')
         self.assertEquals(self.repo.organization, DEFAULT_ORGANIZATION)
         self.assertEquals(self.repo.repository, 'connector')
@@ -95,7 +95,7 @@ class RepoTest(unittest.TestCase):
         dependent = 'OCA/connector 8.0'
         self.repo = Repo(dependent)
         self.assertEquals(self.repo.dependent, dependent)
-        self.assertEquals(self.repo.short_dependent, 'connector')
+        self.assertEquals(self.repo.folder_name, 'connector')
         self.assertEquals(self.repo.branch, '8.0')
         self.assertEquals(self.repo.organization, DEFAULT_ORGANIZATION)
         self.assertEquals(self.repo.repository, 'connector')
@@ -106,7 +106,7 @@ class RepoTest(unittest.TestCase):
         dependent = 'https://github.com/OCA/connector 8.0'
         self.repo = Repo(dependent)
         self.assertEquals(self.repo.dependent, dependent)
-        self.assertEquals(self.repo.short_dependent, 'connector')
+        self.assertEquals(self.repo.folder_name, 'connector')
         self.assertEquals(self.repo.branch, '8.0')
         self.assertEquals(self.repo.organization, DEFAULT_ORGANIZATION)
         self.assertEquals(self.repo.repository, 'connector')
@@ -117,7 +117,7 @@ class RepoTest(unittest.TestCase):
         dependent = 'connector_rename https://github.com/OCA/connector'
         self.repo = Repo(dependent)
         self.assertEquals(self.repo.dependent, dependent)
-        self.assertEquals(self.repo.short_dependent, 'connector_rename')
+        self.assertEquals(self.repo.folder_name, 'connector_rename')
         self.assertEquals(self.repo.branch, None)
         self.assertEquals(self.repo.organization, DEFAULT_ORGANIZATION)
         self.assertEquals(self.repo.repository, 'connector')
@@ -128,7 +128,7 @@ class RepoTest(unittest.TestCase):
         dependent = 'connector_rename https://github.com/OCA/connector 8.0'
         self.repo = Repo(dependent)
         self.assertEquals(self.repo.dependent, dependent)
-        self.assertEquals(self.repo.short_dependent, 'connector_rename')
+        self.assertEquals(self.repo.folder_name, 'connector_rename')
         self.assertEquals(self.repo.branch, '8.0')
         self.assertEquals(self.repo.organization, DEFAULT_ORGANIZATION)
         self.assertEquals(self.repo.repository, 'connector')
@@ -139,7 +139,7 @@ class RepoTest(unittest.TestCase):
         dependent = 'account-financial-reporting https://github.com/OCA/account-financial-reporting 8.0'
         self.repo = Repo(dependent)
         self.assertEquals(self.repo.dependent, dependent)
-        self.assertEquals(self.repo.short_dependent, 'account-financial-reporting')
+        self.assertEquals(self.repo.folder_name, 'account-financial-reporting')
         self.assertEquals(self.repo.branch, '8.0')
         self.assertEquals(self.repo.organization, DEFAULT_ORGANIZATION)
         self.assertEquals(self.repo.repository, 'account-financial-reporting')

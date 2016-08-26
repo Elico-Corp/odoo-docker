@@ -46,7 +46,7 @@ class Repo(object):
             self.parent = None
             self.branch = None
         self.dependent = dependent
-        self.short_dependent = None
+        self.folder_name = None
         self.organization = DEFAULT_ORGANIZATION
         self.repository = None
         self.scheme = DEFAULT_SCHEME
@@ -80,12 +80,12 @@ class Repo(object):
         if _len_args == 1:
             # repo
             self.repository = _args[0]
-            self.short_dependent = self.repository
+            self.folder_name = self.repository
         elif _len_args == 2:
             # organization AND repo
             self.organization = _args[0]
             self.repository = _args[1]
-            self.short_dependent = self.repository
+            self.folder_name = self.repository
 
     def _parse_url(self, url):
         if self.scheme == DEFAULT_SCHEME:
@@ -94,13 +94,13 @@ class Repo(object):
             _args_path = _url_parse.path.split('/')
             self.organization = _args_path[1]
             self.repository = _args_path[2].replace('.git', '')
-            self.short_dependent = self.repository
+            self.folder_name = self.repository
         elif self.scheme == 'git@':
             _args = url.split(':')[1]
             _args_path = _args.split('/')
             self.organization = _args_path[0]
             self.repository = _args_path[1].replace('.git', '')
-            self.short_dependent = self.repository
+            self.folder_name = self.repository
 
     def _parse(self):
         _dependent = self.dependent
@@ -122,7 +122,7 @@ class Repo(object):
                 if self._check_is_url(_args[1]):
                     # repo AND url
                     self._parse_url(_args[1])
-                    self.short_dependent = _args[0]
+                    self.folder_name = _args[0]
                 else:
                     # repo OR organization/repo AND branch
                     self._parse_organization_repo(_args[0])
@@ -133,11 +133,11 @@ class Repo(object):
                 self._parse_organization_repo(_args[0])
                 self._parse_url(_args[1])
                 self._set_branch(_args[2])
-                self.short_dependent = _args[0]
+                self.folder_name = _args[0]
 
     @property
     def path(self):
-        return '%s%s' % (EXTRA_ADDONS_PATH, self.short_dependent)
+        return '%s%s' % (EXTRA_ADDONS_PATH, self.folder_name)
 
     @property
     def resolve_url(self):

@@ -227,14 +227,14 @@ def write_addons_path():
     with open(ODOO_CONF, 'w') as target_file:
         with open(OLD_ODOO_CONF, 'r') as source_file:
             for line in source_file:
-                if line.startswith('addons_path ='):
+                if re.match(r'^addons_path*=*', line):
                     new_line = 'addons_path = %s' % ','.join(list(set(ADDONS_PATH)))
-                    target_file.write(line.replace(line, new_line))
+                    target_file.write(new_line)
                 else:
                     target_file.write(line)
     source_file.close()
     target_file.close()
-    remove(source_file)
+    remove(OLD_ODOO_CONF)
 
 
 def main():

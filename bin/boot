@@ -6,6 +6,8 @@
 # fail hard and fast even on pipelines
 set -eo pipefail
 
+log_src='['${0##*/}']'
+
 function help {
     set +e
     cat bin/help.txt
@@ -13,7 +15,7 @@ function help {
 }
 
 function login  {
-    echo "Running bash"
+    echo $log_src[`date +%F.%H:%M:%S`]' Running bash'
     set +e
     if [[ ! -e $1 && $1 = "root" ]]; then
         /bin/bash
@@ -38,24 +40,24 @@ function start {
     fi
 
     if [ "$ADDONS_REPO" ]; then
-        echo "Setting up SSH key"
+        echo $log_src[`date +%F.%H:%M:%S`]' Setting up SSH key'
         cp -R /mnt/ssh /root/.ssh
         chown -R $USER:$USER /root/.ssh
         chmod 600 /root/.ssh/*
         ssh-keyscan github.com  >> /root/.ssh/known_hosts
-        echo "Downloading additional addons..."
+        echo $log_src[`date +%F.%H:%M:%S`]' Downloading additional addons...'
         python /mnt/scripts/addons.py
     else
-        echo "No additional addons to download"
+        echo $log_src[`date +%F.%H:%M:%S`]' No additional addons to download'
     fi
 
-    echo "Checking special requirements..."
+    echo $log_src[`date +%F.%H:%M:%S`]' Checking special requirements...'
     bash /mnt/scripts/setup.sh
 
-    echo "Running odoo..."
+    echo $log_src[`date +%F.%H:%M:%S`]' Running odoo...'
     set +e
     if [ ! -e $1 ]; then
-        echo "...with additional args: $*"
+        echo $log_src[`date +%F.%H:%M:%S`]' ...with additional args: $*'
     fi
     sudo -i -u odoo /usr/bin/python \
                     /opt/odoo/sources/odoo/openerp-server \
@@ -74,7 +76,7 @@ function on_exit() {
 }
 trap on_exit INT TERM
 
-echo "Search conf file"
+echo $log_src[`date +%F.%H:%M:%S`]' Search conf file'
 if [[ -z "$ODOO_CONF" ]];
 then
     file="/opt/odoo/etc/odoo.conf"
@@ -85,9 +87,9 @@ if [ -f "$file" ]; then
     rm $file
 fi
 cp /opt/sources/odoo.conf $file
-echo "Running chown..."
+echo $log_src[`date +%F.%H:%M:%S`]' Running chown...'
 chown -R odoo /opt/odoo
-echo "Running command..."
+echo $log_src[`date +%F.%H:%M:%S`]' Running command...'
 for arg in "$*"
 do
     $arg

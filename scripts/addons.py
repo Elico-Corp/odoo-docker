@@ -10,8 +10,8 @@ from subprocess import check_output
 EXTRA_ADDONS_PATH = '/mnt/data/additional_addons/'
 ODOO_CONF = '/opt/odoo/etc/odoo.conf'
 ADDONS_PATH = ['/opt/odoo/sources/odoo/addons']
-SCHEME = 'https://'
-GIT_REPOSITORY_HOSTING_SERVICE = 'github.com'
+DEFAULT_SCHEME = 'https://'
+DEFAULT_GIT_REPO_HOSTING_SERVICE = 'github.com'
 DEFAULT_ORGANIZATION = 'OCA'
 
 
@@ -21,19 +21,19 @@ class Repo(object):
 
     For public repo:
 
-    oca-repo -> https://github.com/OCA/oca-repo (branch: master)
+    oca-repo -> https://github.com/OCA/oca-repo (branch: default_branch)
     oca-repo 8.0 -> https://github.com/OCA/oca-repo (branch: 8.0)
-    organization/public-repo -> https://github.com/organization/public-repo (branch: master)
+    organization/public-repo -> https://github.com/organization/public-repo (branch: default_branch)
     organization/public-repo 8.0 -> https://github.com/organization/public-repo (branch: 8.0)
-    https://github.com/organization/public-repo -> https://github.com/organization/public-repo (branch: master)
+    https://github.com/organization/public-repo -> https://github.com/organization/public-repo (branch: default_branch)
     https://github.com/organization/public-repo 8.0 -> https://github.com/organization/public-repo (branch: 8.0)
-    public-repo_rename https://github.com/organization/public-repo -> https://github.com/organization/public-repo (branch: master)
+    public-repo_rename https://github.com/organization/public-repo -> https://github.com/organization/public-repo (branch: default_branch)
     public-repo_rename https://github.com/organization/public-repo 8.0 -> https://github.com/organization/public-repo (branch: 8.0)
 
     For private repo:
 
-    git@github.com:Elico-Corp/private_repo
-    git@github.com:Elico-Corp/private_repo 8.0
+    git@github.com:Elico-Corp/private-repo
+    git@github.com:Elico-Corp/private-repo 8.0
     private_repo_rename git@github.com:Elico-Corp/private-repo
     private_repo_rename git@github.com:Elico-Corp/private_repo 8.0
 
@@ -49,8 +49,8 @@ class Repo(object):
         self.short_dependent = None
         self.organization = DEFAULT_ORGANIZATION
         self.repository = None
-        self.scheme = SCHEME
-        self.git_repo_host = GIT_REPOSITORY_HOSTING_SERVICE
+        self.scheme = DEFAULT_SCHEME
+        self.git_repo_host = DEFAULT_GIT_REPO_HOSTING_SERVICE
         self._parse()
 
     def _set_branch(self, branch):
@@ -85,7 +85,7 @@ class Repo(object):
             self.short_dependent = self.repository
 
     def _parse_url(self, url):
-        if self.scheme == SCHEME:
+        if self.scheme == DEFAULT_SCHEME:
             _url_parse = urlparse(url)
             self.git_repo_host = _url_parse.netloc
             _args_path = _url_parse.path.split('/')

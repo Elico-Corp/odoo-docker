@@ -27,6 +27,7 @@ function login  {
 }
 
 function start {
+    echo $log_src[`date +%F.%H:%M:%S`]' Updating Odoo conf...'
     if [ "$ADMIN_PASSWORD" ]; then
         sed -i "s/_ADMIN_PASSWORD_/$ADMIN_PASSWORD/g" /opt/odoo/etc/odoo.conf
     fi
@@ -54,7 +55,7 @@ function start {
     echo $log_src[`date +%F.%H:%M:%S`]' Checking special requirements...'
     bash /mnt/scripts/setup.sh
 
-    echo $log_src[`date +%F.%H:%M:%S`]' Running odoo...'
+    echo $log_src[`date +%F.%H:%M:%S`]' Changing owner of Odoo folder...'
     set +e
     if [ ! -e $1 ]; then
         echo $log_src[`date +%F.%H:%M:%S`]' ...with additional args: $*'

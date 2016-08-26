@@ -13,6 +13,7 @@ ADDONS_PATH = ['/opt/odoo/sources/odoo/addons']
 DEFAULT_SCHEME = 'https://'
 DEFAULT_GIT_REPO_HOSTING_SERVICE = 'github.com'
 DEFAULT_ORGANIZATION = 'OCA'
+DEPENDENCIES_FILE = 'oca_dependencies.txt'
 
 
 class Repo(object):
@@ -61,6 +62,7 @@ class Repo(object):
 
     def _check_is_ssh(self, url):
         # TODO For other hosting services, this part should be dynamic.
+        # TODO support former like ssh://git@gitlab.domain.name:10022
         if url.startswith('git@github.com:'):
             self.scheme = 'git@'
             self.git_repo_host = 'github.com:'
@@ -202,7 +204,7 @@ class Repo(object):
         self.download_dependency()
 
     def download_dependency(self):
-        filename = '%s/oca_dependencies.txt' % self.path
+        filename = '%s/%s' % (self.path, DEPENDENCIES_FILE)
         if not os.path.exists(filename):
             return
         repo_list = []
@@ -226,7 +228,7 @@ def write_addons_path():
 def main():
     dependent = os.environ.get('ADDONS_REPO')
     if dependent:
-        print('dependent: %s ' % (dependent, ))
+        print('dependent: %s ' % dependent)
         Repo(dependent).download()
     write_addons_path()
 

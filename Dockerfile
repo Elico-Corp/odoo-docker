@@ -72,7 +72,7 @@ RUN git clone https://github.com/OCA/OCB.git -b 8.0 odoo && \
 
 # Execution environment
 USER 0
-ADD sources/odoo.conf /opt/sources/odoo.conf
+ADD sources/odoo.conf /opt/etc/odoo.conf
 ADD scripts /mnt/scripts
 RUN mkdir /mnt/ssh
 WORKDIR /app

@@ -50,6 +50,11 @@ function start {
         python /mnt/scripts/addons.py
     else
         echo $log_src[`date +%F.%H:%M:%S`]' No additional addons to download'
+        odoo_conf_file="/opt/odoo/etc/odoo.conf"
+        search_txt_result=$(grep -n "addons_path =" "$odoo_conf_file")
+        if [ ! -n "$search_txt_result" ]; then
+            echo addons_path = /opt/odoo/sources/odoo/addons >> $odoo_conf_file
+        fi
     fi
 
     echo $log_src[`date +%F.%H:%M:%S`]' Checking special requirements...'
@@ -84,11 +89,6 @@ then
 else
     file=$ODOO_CONF
 fi
-# TODO more test case make sure this compatible with our current infra
-if [ -f "$file" ]; then
-    rm $file
-fi
-cp /opt/sources/odoo.conf $file
 echo $log_src[`date +%F.%H:%M:%S`]' Running chown...'
 chown -R odoo /opt/odoo
 echo $log_src[`date +%F.%H:%M:%S`]' Running command...'

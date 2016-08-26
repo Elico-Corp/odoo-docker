@@ -3,11 +3,14 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 import os
 import re
+from os import remove
+from shutil import move
 from urlparse import urlparse
 from subprocess import call
 from subprocess import check_output
 
 EXTRA_ADDONS_PATH = '/mnt/data/additional_addons/'
+OLD_ODOO_CONF = '/opt/odoo/etc/odoo.conf.old'
 ODOO_CONF = '/opt/odoo/etc/odoo.conf'
 ADDONS_PATH = ['/opt/odoo/sources/odoo/addons']
 DEFAULT_SCHEME = 'https://'
@@ -220,9 +223,18 @@ class Repo(object):
 
 
 def write_addons_path():
-    with open(ODOO_CONF, 'a') as f:
-        f.write('addons_path = %s' % ','.join(list(set(ADDONS_PATH))))
-    f.close()
+    move(ODOO_CONF, OLD_ODOO_CONF)
+    with open(ODOO_CONF, 'w') as target_file:
+        with open(OLD_ODOO_CONF, 'r') as source_file:
+            for line in source_file:
+                if line.startswith('addons_path ='):
+                    new_line = 'addons_path = %s' % ','.join(list(set(ADDONS_PATH)))
+                    target_file.write(line.replace(line, new_line))
+                else:
+                    target_file.write(line)
+    source_file.close()
+    target_file.close()
+    remove(source_file)
 
 
 def main():

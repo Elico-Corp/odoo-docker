@@ -41,10 +41,7 @@ function start {
         echo "Setting up SSH key"
         cp -R /mnt/ssh /root/.ssh
         chown -R $USER:$USER /root/.ssh
-        ssh_file="/root/.ssh/id_rsa"
-        if [ -f "$ssh_file" ]; then
-            chmod 600 /root/.ssh/id_rsa
-        fi
+        chmod 600 /root/.ssh/*
         ssh-keyscan github.com  >> /root/.ssh/known_hosts
         echo "Downloading additional addons..."
         python /mnt/scripts/addons.py
@@ -88,7 +85,7 @@ if [ -f "$file" ]; then
     rm $file
 fi
 cp /opt/sources/odoo.conf $file
-echo "Copy template as conf file $file"
+echo "Running chown..."
 chown -R odoo /opt/odoo
 echo "Running command..."
 for arg in "$*"

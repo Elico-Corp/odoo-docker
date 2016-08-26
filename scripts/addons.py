@@ -1,31 +1,13 @@
 # -*- coding: utf-8 -*-
-##############################################################################
-#
-#    Odoo, Open Source Management Solution
-#    Copyright (c) 2010-2015 Elico Corp.
-#    Augustin Cisterne-Kaas <augustin.cisterne-kaas@elico-corp.com>
-#
-#    This program is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation, either version 3 of the License, or
-#    (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
-#    You should have received a copy of the GNU General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-##############################################################################
+# Copyright 2015 Elico Corp
+# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 import os
 import re
 from urlparse import urlparse
 from subprocess import call
 from subprocess import check_output
 
-DOWNLOAD_PATH = '/mnt/data/additional_addons/'
+EXTRA_ADDONS_PATH = '/mnt/data/additional_addons/'
 ODOO_CONF = '/opt/odoo/etc/odoo.conf'
 ADDONS_PATH = ['/opt/odoo/sources/odoo/addons']
 SCHEME = 'https://'
@@ -152,7 +134,7 @@ class Repo(object):
 
     @property
     def path(self):
-        return '%s%s' % (DOWNLOAD_PATH, self.short_dependent)
+        return '%s%s' % (EXTRA_ADDONS_PATH, self.short_dependent)
 
     @property
     def resolve_url(self):

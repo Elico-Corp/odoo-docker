@@ -76,7 +76,7 @@ ADD sources/odoo.conf /opt/sources/odoo.conf
 ADD scripts /mnt/scripts
 RUN mkdir /mnt/ssh
 WORKDIR /app
-VOLUME ["/opt/odoo/var", "/opt/odoo/etc", "/opt/odoo/additional_addons", "/opt/odoo/data", "/mnt/scripts/", "/mnt/ssh"]
+VOLUME ["/opt/odoo/var", "/opt/odoo/etc", "/opt/odoo/additional_addons", "/opt/odoo/data", "/mnt/scripts", "/mnt/ssh"]
 # Set the default entrypoint (non overridable) to run when starting the container
 ENTRYPOINT ["/app/bin/boot"]
 CMD ["help"]

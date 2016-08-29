@@ -196,13 +196,18 @@ class Repo(object):
         if self.path in ADDONS_PATH:
             return
         if os.path.exists(self.path):
-            print('PULL: %s %s' % (self.path, self.branch))
-            cmd = self.update_cmd
-            call(cmd)
+            fetch_oca_dependencies = os.getenv('FETCH_OCA_DEPENDENCIES')
+            if fetch_oca_dependencies == 'FALSE':
+                self.get_branch_name()
+            else:
+                print('PULL: %s %s' % (self.path, self.branch))
+                cmd = self.update_cmd
+                call(cmd)
         else:
             print('CLONE: %s %s' % (self.path, self.branch))
             call(self.download_cmd)
             self.get_branch_name()
+
         ADDONS_PATH.append(self.path)
         self.download_dependency()
 
@@ -231,7 +236,7 @@ def write_addons_path():
                 break
     conf_file.close()
 
-    if not contains_addons_path:
+    if contains_addons_path:
         move(ODOO_CONF, OLD_ODOO_CONF)
         with open(ODOO_CONF, 'a') as target_file:
             with open(OLD_ODOO_CONF, 'r') as source_file:

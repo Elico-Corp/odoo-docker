@@ -4,6 +4,7 @@
 import re
 
 ODOO_CONF = '/opt/odoo/etc/odoo.conf'
+DEFAULT_ADDONS_PATH = 'addons_path = /opt/odoo/sources/odoo/addons'
 
 
 def main():
@@ -18,9 +19,7 @@ def main():
     if not contains_addons_path:
         print('ADDED default addons_path in odoo.conf')
         with open(ODOO_CONF, 'a') as conf_file:
-            conf_file.write(
-                'addons_path = /opt/odoo/sources/odoo/addons'
-            )
+            conf_file.write(DEFAULT_ADDONS_PATH)
 
     conf_file.close()
 

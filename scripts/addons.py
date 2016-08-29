@@ -223,18 +223,32 @@ class Repo(object):
 
 
 def write_addons_path():
-    move(ODOO_CONF, OLD_ODOO_CONF)
-    with open(ODOO_CONF, 'w') as target_file:
-        with open(OLD_ODOO_CONF, 'r') as source_file:
-            for line in source_file:
-                if re.match(r'^addons_path*=*', line):
-                    new_line = 'addons_path = %s' % ','.join(list(set(ADDONS_PATH)))
-                    target_file.write(new_line)
-                else:
-                    target_file.write(line)
-    source_file.close()
-    target_file.close()
-    remove(OLD_ODOO_CONF)
+    contains_addons_path = False
+    with open(ODOO_CONF, 'r') as conf_file:
+        for line in conf_file:
+            if re.match(r'^addons_path*=*', line):
+                contains_addons_path = True
+                break
+    conf_file.close()
+
+    if not contains_addons_path:
+        move(ODOO_CONF, OLD_ODOO_CONF)
+        with open(ODOO_CONF, 'a') as target_file:
+            with open(OLD_ODOO_CONF, 'r') as source_file:
+                for line in source_file:
+                    if re.match(r'^addons_path*=*', line):
+                        new_line = 'addons_path = %s' % ','.join(list(set(ADDONS_PATH)))
+                        target_file.write(new_line)
+                    else:
+                        target_file.write(line)
+        source_file.close()
+        target_file.close()
+        remove(OLD_ODOO_CONF)
+    else:
+        with open(ODOO_CONF, 'a') as conf_file:
+            new_line = 'addons_path = %s' % ','.join(list(set(ADDONS_PATH)))
+            conf_file.write(new_line)
+        conf_file.close()
 
 
 def main():

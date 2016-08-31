@@ -50,14 +50,8 @@ function start {
         python /mnt/scripts/addons.py
     else
         echo $log_src[`date +%F.%H:%M:%S`]' No additional addons to download'
-        python /mnt/scripts/noaddons.py
-        # FIXME the grep doesn't work because of the ^
-        # odoo_conf_file="/opt/odoo/etc/odoo.conf"
-        # echo "$odoo_conf_file"
-        # grep -P "^addons_path\s*=" "$odoo_conf_file"
-        # if [ $? -ne 0 ]; then
-        #     echo "addons_path = /opt/odoo/sources/odoo/addons" >> $odoo_conf_file
-        # fi
+        # FIXME this script should be replaced with the code from commit 6076053
+        python /mnt/scripts/no_addons.py
     fi
 
     echo $log_src[`date +%F.%H:%M:%S`]' Checking special requirements...'

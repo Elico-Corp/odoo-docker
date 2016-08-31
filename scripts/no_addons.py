@@ -2,8 +2,8 @@
 # Copyright 2015 Elico Corp
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 import re
+from .addons import ODOO_CONF, REGEX_ADDONS_PATH
 
-ODOO_CONF = '/opt/odoo/etc/odoo.conf'
 DEFAULT_ADDONS_PATH = 'addons_path = /opt/odoo/sources/odoo/addons'
 
 
@@ -11,7 +11,7 @@ def main():
     contains_addons_path = False
     with open(ODOO_CONF, 'r') as conf_file:
         for line in conf_file:
-            if re.match(r'^addons_path*=*', line):
+            if re.match(REGEX_ADDONS_PATH, line):
                 contains_addons_path = True
                 break
     conf_file.close()

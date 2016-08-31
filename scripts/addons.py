@@ -17,6 +17,7 @@ DEFAULT_SCHEME = 'https://'
 DEFAULT_GIT_REPO_HOSTING_SERVICE = 'github.com'
 DEFAULT_ORGANIZATION = 'OCA'
 DEPENDENCIES_FILE = 'oca_dependencies.txt'
+REGEX_ADDONS_PATH = r'^addons_path\s+=\s*'
 
 
 class Repo(object):
@@ -31,25 +32,25 @@ class Repo(object):
     organization/public-repo 8.0 -> https://github.com/organization/public-repo (branch: 8.0)
     https://github.com/organization/public-repo -> https://github.com/organization/public-repo (branch: default_branch)
     https://github.com/organization/public-repo 8.0 -> https://github.com/organization/public-repo (branch: 8.0)
-    public-repo_rename https://github.com/organization/public-repo -> https://github.com/organization/public-repo (branch: default_branch)
-    public-repo_rename https://github.com/organization/public-repo 8.0 -> https://github.com/organization/public-repo (branch: 8.0)
+    public_repo_rename https://github.com/organization/public-repo -> https://github.com/organization/public-repo (branch: default_branch)
+    public_repo_rename https://github.com/organization/public-repo 8.0 -> https://github.com/organization/public-repo (branch: 8.0)
 
     For private repo:
 
     git@github.com:Elico-Corp/private-repo
     git@github.com:Elico-Corp/private-repo 8.0
     private_repo_rename git@github.com:Elico-Corp/private-repo
-    private_repo_rename git@github.com:Elico-Corp/private_repo 8.0
+    private_repo_rename git@github.com:Elico-Corp/private-repo 8.0
 
     """
-    def __init__(self, dependent, parent=None):
+    def __init__(self, remote_url, parent=None):
         if parent:
             self.parent = parent
             self.branch = self.parent.branch
         else:
             self.parent = None
             self.branch = None
-        self.dependent = dependent
+        self.remote_url = remote_url
         self.folder_name = None
         self.organization = DEFAULT_ORGANIZATION
         self.repository = None
@@ -65,7 +66,7 @@ class Repo(object):
 
     def _check_is_ssh(self, url):
         # TODO For other hosting services, this part should be dynamic.
-        # TODO support former like ssh://git@gitlab.domain.name:10022
+        # TODO support URL like ssh://git@gitlab.domain.name:10022
         if url.startswith('git@github.com:'):
             self.scheme = 'git@'
             self.git_repo_host = 'github.com:'
@@ -91,8 +92,8 @@ class Repo(object):
                 if line.startswith('*'):
                     self._set_branch(line.replace('* ', ''))
 
-    def _parse_organization_repo(self, dependent):
-        _args = dependent.split('/')
+    def _parse_organization_repo(self, remote_url):
+        _args = remote_url.split('/')
         _len_args = len(_args)
         if _len_args == 1:
             # repo
@@ -120,8 +121,8 @@ class Repo(object):
             self.folder_name = self.repository
 
     def _parse(self):
-        _dependent = self.dependent
-        _args = _dependent.split(' ')
+        _remote_url = self.remote_url
+        _args = _remote_url.split(' ')
         _len_args = len(_args)
         if _len_args == 1:
             if self._check_is_url(_args[0]):
@@ -228,39 +229,26 @@ class Repo(object):
 
 
 def write_addons_path():
-    contains_addons_path = False
-    with open(ODOO_CONF, 'r') as conf_file:
-        for line in conf_file:
-            if re.match(r'^addons_path*=*', line):
-                contains_addons_path = True
-                break
-    conf_file.close()
+    move(ODOO_CONF, OLD_ODOO_CONF)
+    with open(ODOO_CONF, 'a') as target_file:
+        with open(OLD_ODOO_CONF, 'r') as source_file:
+            for line in source_file:
+                if not re.match(REGEX_ADDONS_PATH, line):
+                    target_file.write(line)
 
-    if contains_addons_path:
-        move(ODOO_CONF, OLD_ODOO_CONF)
-        with open(ODOO_CONF, 'a') as target_file:
-            with open(OLD_ODOO_CONF, 'r') as source_file:
-                for line in source_file:
-                    if re.match(r'^addons_path*=*', line):
-                        new_line = 'addons_path = %s' % ','.join(list(set(ADDONS_PATH)))
-                        target_file.write(new_line)
-                    else:
-                        target_file.write(line)
-        source_file.close()
-        target_file.close()
-        remove(OLD_ODOO_CONF)
-    else:
-        with open(ODOO_CONF, 'a') as conf_file:
-            new_line = 'addons_path = %s' % ','.join(list(set(ADDONS_PATH)))
-            conf_file.write(new_line)
-        conf_file.close()
+    new_line = 'addons_path = %s' % ','.join(list(set(ADDONS_PATH)))
+    target_file.write(new_line)
+
+    source_file.close()
+    target_file.close()
+    remove(OLD_ODOO_CONF)
 
 
 def main():
-    dependent = os.environ.get('ADDONS_REPO')
-    if dependent:
-        print('dependent: %s ' % dependent)
-        Repo(dependent).download()
+    remote_url = os.environ.get('ADDONS_REPO')
+    if remote_url:
+        print('remote_url: %s ' % remote_url)
+        Repo(remote_url).download()
     write_addons_path()
 
 if __name__ == '__main__':

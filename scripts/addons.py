@@ -17,7 +17,7 @@ DEFAULT_SCHEME = 'https://'
 DEFAULT_GIT_REPO_HOSTING_SERVICE = 'github.com'
 DEFAULT_ORGANIZATION = 'OCA'
 DEPENDENCIES_FILE = 'oca_dependencies.txt'
-REGEX_ADDONS_PATH = r'^addons_path\s+=\s*'
+REGEX_ADDONS_PATH = r'^addons_path\s*=\s*'
 
 
 class Repo(object):
@@ -26,13 +26,13 @@ class Repo(object):
 
     For public repo:
 
-    oca-repo -> https://github.com/OCA/oca-repo (branch: default_branch)
+    oca-repo -> https://github.com/OCA/oca-repo (default branch)
     oca-repo 8.0 -> https://github.com/OCA/oca-repo (branch: 8.0)
-    organization/public-repo -> https://github.com/organization/public-repo (branch: default_branch)
+    organization/public-repo -> https://github.com/organization/public-repo (default branch)
     organization/public-repo 8.0 -> https://github.com/organization/public-repo (branch: 8.0)
-    https://github.com/organization/public-repo -> https://github.com/organization/public-repo (branch: default_branch)
+    https://github.com/organization/public-repo -> https://github.com/organization/public-repo (default branch)
     https://github.com/organization/public-repo 8.0 -> https://github.com/organization/public-repo (branch: 8.0)
-    public_repo_rename https://github.com/organization/public-repo -> https://github.com/organization/public-repo (branch: default_branch)
+    public_repo_rename https://github.com/organization/public-repo -> https://github.com/organization/public-repo (default branch)
     public_repo_rename https://github.com/organization/public-repo 8.0 -> https://github.com/organization/public-repo (branch: 8.0)
 
     For private repo:
@@ -67,6 +67,7 @@ class Repo(object):
     def _check_is_ssh(self, url):
         # TODO For other hosting services, this part should be dynamic.
         # TODO support URL like ssh://git@gitlab.domain.name:10022
+        # TODO Maybe we could consider using a standard URL parser in the future.
         if url.startswith('git@github.com:'):
             self.scheme = 'git@'
             self.git_repo_host = 'github.com:'
@@ -80,17 +81,14 @@ class Repo(object):
                 return True
             return False
 
-    def get_branch_name(self):
-        if self.branch:
-            return self.branch
-        else:
-            branch_cmd = 'git --git-dir=%s/.git --work-tree=%s branch' % (
-                self.path, self.path
-            )
-            output = check_output(branch_cmd, shell=True)
-            for line in output.split('\n'):
-                if line.startswith('*'):
-                    self._set_branch(line.replace('* ', ''))
+    def fetch_branch_name(self):
+        branch_cmd = 'git --git-dir=%s/.git --work-tree=%s branch' % (
+            self.path, self.path
+        )
+        output = check_output(branch_cmd, shell=True)
+        for line in output.split('\n'):
+            if line.startswith('*'):
+                self._set_branch(line.replace('* ', ''))
 
     def _parse_organization_repo(self, remote_url):
         _args = remote_url.split('/')
@@ -187,7 +185,7 @@ class Repo(object):
             )
             return cmd.split()
         else:
-            self.get_branch_name()
+            self.fetch_branch_name()
             cmd = 'git --git-dir=%s/.git --work-tree=%s pull origin %s' % (
                 self.path, self.path, self.branch
             )
@@ -199,7 +197,7 @@ class Repo(object):
         if os.path.exists(self.path):
             fetch_oca_dependencies = os.getenv('FETCH_OCA_DEPENDENCIES')
             if fetch_oca_dependencies == 'FALSE':
-                self.get_branch_name()
+                self.fetch_branch_name()
             else:
                 print('PULL: %s %s' % (self.path, self.branch))
                 cmd = self.update_cmd
@@ -207,7 +205,7 @@ class Repo(object):
         else:
             print('CLONE: %s %s' % (self.path, self.branch))
             call(self.download_cmd)
-            self.get_branch_name()
+            self.fetch_branch_name()
 
         ADDONS_PATH.append(self.path)
         self.download_dependency()
@@ -223,24 +221,20 @@ class Repo(object):
                 if l.startswith('#') or not l:
                     continue
                 repo_list.append(Repo(l, self))
-        f.close()
         for repo in repo_list:
             repo.download()
 
 
 def write_addons_path():
     move(ODOO_CONF, OLD_ODOO_CONF)
-    with open(ODOO_CONF, 'a') as target_file:
-        with open(OLD_ODOO_CONF, 'r') as source_file:
-            for line in source_file:
-                if not re.match(REGEX_ADDONS_PATH, line):
-                    target_file.write(line)
+    with open(ODOO_CONF, 'a') as target_file, open(OLD_ODOO_CONF, 'r') as source_file:
+        for line in source_file:
+            if not re.match(REGEX_ADDONS_PATH, line):
+                target_file.write(line)
 
-    new_line = 'addons_path = %s' % ','.join(list(set(ADDONS_PATH)))
-    target_file.write(new_line)
+        new_line = 'addons_path = %s' % ','.join(list(set(ADDONS_PATH)))
+        target_file.write(new_line)
 
-    source_file.close()
-    target_file.close()
     remove(OLD_ODOO_CONF)
 
 

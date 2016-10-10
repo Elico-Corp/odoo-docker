@@ -157,7 +157,11 @@ class Repo(object):
 
     @property
     def resolve_url(self):
-        _resolve_url = '%s%s/%s/%s.git' % (
+        _resolve_url_str = '%s%s/%s/%s.git'
+        if self.scheme == 'git@':
+            _resolve_url_str = '%s%s%s/%s.git'
+
+        _resolve_url = _resolve_url_str % (
             self.scheme,
             self.git_repo_host,
             self.organization,

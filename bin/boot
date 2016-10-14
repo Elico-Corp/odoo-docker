@@ -31,7 +31,7 @@ function start {
         echo "...with additional args: $*"
     fi
     sudo -i -u odoo /usr/bin/python \
-                    /opt/odoo/sources/odoo/openerp-server \
+                    /opt/odoo/sources/odoo/odoo-bin \
                     -c $file \
                     $*
 

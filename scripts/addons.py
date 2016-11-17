@@ -46,7 +46,9 @@ class Repo(object):
     def __init__(self, remote_url, parent=None):
         if parent:
             self.parent = parent
-            self.branch = self.parent.branch
+            # This will cause an issue with child repo branch
+            # self.branch = self.parent.branch
+            self.branch = None
         else:
             self.parent = None
             self.branch = None

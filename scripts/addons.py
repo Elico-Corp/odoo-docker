@@ -46,9 +46,7 @@ class Repo(object):
     def __init__(self, remote_url, parent=None):
         if parent:
             self.parent = parent
-            # This will cause an issue with child repo branch
-            # self.branch = self.parent.branch
-            self.branch = None
+            self.branch = self.parent.branch
         else:
             self.parent = None
             self.branch = None
@@ -197,7 +195,7 @@ class Repo(object):
             )
             return cmd.split()
 
-    def download(self):
+    def download(self, parent=None, is_loop=False):
         if self.path in ADDONS_PATH:
             return
         if os.path.exists(self.path):
@@ -210,11 +208,20 @@ class Repo(object):
                 call(cmd)
         else:
             print('CLONE: %s %s' % (self.path, self.branch))
-            call(self.download_cmd)
-            self.fetch_branch_name()
+            result = call(self.download_cmd)
+            if result != 0:
+                if parent and parent.parent:
+                    self.branch = parent.parent.branch
+                    self.download(parent=parent.parent, is_loop=True)
+                else:
+                    self.branch = None
+                    self.download(is_loop=True)
+            else:
+                self.fetch_branch_name()
 
-        ADDONS_PATH.append(self.path)
-        self.download_dependency()
+        if not is_loop:
+            ADDONS_PATH.append(self.path)
+            self.download_dependency()
 
     def download_dependency(self):
         filename = '%s/%s' % (self.path, DEPENDENCIES_FILE)
@@ -228,7 +235,7 @@ class Repo(object):
                     continue
                 repo_list.append(Repo(l, self))
         for repo in repo_list:
-            repo.download()
+            repo.download(repo.parent)
 
 
 def write_addons_path():

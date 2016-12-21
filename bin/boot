@@ -55,7 +55,7 @@ function start {
     fi
 
     echo $log_src[`date +%F.%H:%M:%S`]' Checking special requirements...'
-    bash /mnt/scripts/setup.sh
+    bash /mnt/scripts/startup.sh
 
     echo $log_src[`date +%F.%H:%M:%S`]' Changing owner of Odoo folder...'
     set +e

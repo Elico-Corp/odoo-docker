@@ -70,9 +70,9 @@ WORKDIR /opt/odoo/sources
 RUN git clone https://github.com/OCA/OCB.git -b 8.0 odoo && \
   rm -rf odoo/.git
 
+ADD sources/odoo.conf /opt/odoo/etc/odoo.conf
 # Execution environment
 USER 0
-ADD sources/odoo.conf /opt/odoo/etc/odoo.conf
 ADD scripts /mnt/scripts
 RUN mkdir /mnt/ssh
 WORKDIR /app

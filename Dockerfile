@@ -71,6 +71,8 @@ RUN git clone https://github.com/OCA/OCB.git -b 8.0 odoo && \
   rm -rf odoo/.git
 
 ADD sources/odoo.conf /opt/odoo/etc/odoo.conf
+ADD auto_addons /opt/odoo/auto_addons
+
 # Execution environment
 USER 0
 ADD scripts /mnt/scripts

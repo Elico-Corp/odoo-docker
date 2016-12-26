@@ -9,7 +9,7 @@ from urlparse import urlparse
 from subprocess import call
 from subprocess import check_output
 
-EXTRA_ADDONS_PATH = '/mnt/data/additional_addons/'
+EXTRA_ADDONS_PATH = '/opt/odoo/additional_addons/'
 OLD_ODOO_CONF = '/opt/odoo/etc/odoo.conf.old'
 ODOO_CONF = '/opt/odoo/etc/odoo.conf'
 ADDONS_PATH = ['/opt/odoo/sources/odoo/addons']

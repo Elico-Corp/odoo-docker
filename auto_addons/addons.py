@@ -260,12 +260,13 @@ def write_addons_path():
 
 def main():
     remote_url = None
-    fetch_oca_dependencies = False
+    fetch_oca_dependencies = True
 
     if len(sys.argv) > 1:
         remote_url = sys.argv[1]
     if len(sys.argv) > 2:
-        fetch_oca_dependencies = sys.argv[2]
+        if str(sys.argv[2]).lower() == 'false':
+            fetch_oca_dependencies = False
 
     if remote_url:
         print('remote_url: %s ' % remote_url)

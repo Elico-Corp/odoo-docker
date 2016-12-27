@@ -51,7 +51,7 @@ function start {
         chown -R odoo:odoo /opt/odoo/.ssh
         chmod 600 /opt/odoo/.ssh/*
         echo $log_src[`date +%F.%H:%M:%S`]' Downloading additional addons...'
-        sudo -i -u odoo python /opt/odoo/auto_addons/addons.py
+        sudo -i -u odoo python /opt/odoo/auto_addons/addons.py $ADDONS_REPO $FETCH_OCA_DEPENDENCIES
     else
         echo $log_src[`date +%F.%H:%M:%S`]' No additional addons to download'
         # FIXME this script should be replaced with the code from commit 6076053

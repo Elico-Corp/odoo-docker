@@ -3,6 +3,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 import os
 import re
+import sys
 from os import remove
 from shutil import move
 from urlparse import urlparse
@@ -195,35 +196,39 @@ class Repo(object):
             )
             return cmd.split()
 
-    def download(self, parent=None, is_loop=False):
+    def download(self, parent=None, is_loop=False, fetch_oca_dependencies=False):
         if self.path in ADDONS_PATH:
             return
         if os.path.exists(self.path):
-            fetch_oca_dependencies = os.getenv('FETCH_OCA_DEPENDENCIES')
-            if fetch_oca_dependencies == 'FALSE':
-                self.fetch_branch_name()
-            else:
+            if fetch_oca_dependencies:
                 print('PULL: %s %s' % (self.path, self.branch))
                 cmd = self.update_cmd
                 call(cmd)
+            else:
+                self.fetch_branch_name()
         else:
             print('CLONE: %s %s' % (self.path, self.branch))
             result = call(self.download_cmd)
             if result != 0:
                 if parent and parent.parent:
                     self.branch = parent.parent.branch
-                    self.download(parent=parent.parent, is_loop=True)
+                    self.download(
+                        parent=parent.parent,
+                        is_loop=True,
+                        fetch_oca_dependencies=fetch_oca_dependencies)
                 else:
                     self.branch = None
-                    self.download(is_loop=True)
+                    self.download(
+                        is_loop=True,
+                        fetch_oca_dependencies=fetch_oca_dependencies)
             else:
                 self.fetch_branch_name()
 
         if not is_loop:
             ADDONS_PATH.append(self.path)
-            self.download_dependency()
+            self.download_dependency(fetch_oca_dependencies)
 
-    def download_dependency(self):
+    def download_dependency(self, fetch_oca_dependencies=False):
         filename = '%s/%s' % (self.path, DEPENDENCIES_FILE)
         if not os.path.exists(filename):
             return
@@ -235,7 +240,9 @@ class Repo(object):
                     continue
                 repo_list.append(Repo(l, self))
         for repo in repo_list:
-            repo.download(repo.parent)
+            repo.download(
+                parent=repo.parent,
+                fetch_oca_dependencies=fetch_oca_dependencies)
 
 
 def write_addons_path():
@@ -252,10 +259,19 @@ def write_addons_path():
 
 
 def main():
-    remote_url = os.environ.get('ADDONS_REPO')
+    remote_url = None
+    fetch_oca_dependencies = False
+
+    if len(sys.argv) > 1:
+        remote_url = sys.argv[1]
+    if len(sys.argv) > 2:
+        fetch_oca_dependencies = sys.argv[2]
+
     if remote_url:
         print('remote_url: %s ' % remote_url)
-        Repo(remote_url).download()
+        Repo(remote_url).download(
+            fetch_oca_dependencies=fetch_oca_dependencies)
+
     write_addons_path()
 
 if __name__ == '__main__':

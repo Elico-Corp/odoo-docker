@@ -90,8 +90,6 @@ then
 else
     file=$ODOO_CONF
 fi
-echo $log_src[`date +%F.%H:%M:%S`]' Changing owner of Odoo folder...'
-chown -R odoo /opt/odoo
 echo $log_src[`date +%F.%H:%M:%S`]' Running command...'
 for arg in "$*"
 do

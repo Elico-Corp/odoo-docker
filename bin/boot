@@ -6,6 +6,8 @@
 # fail hard and fast even on pipelines
 set -eo pipefail
 
+log_src='['${0##*/}']'
+
 function help {
     set +e
     cat bin/help.txt
@@ -13,7 +15,7 @@ function help {
 }
 
 function login  {
-    echo "Running bash"
+    echo $log_src[`date +%F.%H:%M:%S`]' Running bash'
     set +e
     if [[ ! -e $1 && $1 = "root" ]]; then
         /bin/bash
@@ -25,10 +27,44 @@ function login  {
 }
 
 function start {
-    echo "Running odoo..."
+    echo $log_src[`date +%F.%H:%M:%S`]' Updating Odoo conf...'
+    if [ "$ADMIN_PASSWORD" ]; then
+        sudo -i -u odoo sed -i "s/_ADMIN_PASSWORD_/$ADMIN_PASSWORD/g" /opt/odoo/etc/odoo.conf
+    fi
+
+    if [ "$DB_USER" ]; then
+        sudo -i -u odoo sed -i "s/_DB_USER_/$DB_USER/g" /opt/odoo/etc/odoo.conf
+    fi
+
+    if [ "$DB_PASSWORD" ]; then
+        sudo -i -u odoo sed -i "s/_DB_PASSWORD_/$DB_PASSWORD/g" /opt/odoo/etc/odoo.conf
+    fi
+
+    if [ "$DB_FILTER" ]; then
+        sudo -i -u odoo sed -i "s/_DB_FILTER_/$DB_FILTER/g" /opt/odoo/etc/odoo.conf
+    fi
+
+    if [ "$ADDONS_REPO" ]; then
+        echo $log_src[`date +%F.%H:%M:%S`]' Setting up SSH key'
+        cp -R /mnt/ssh /opt/odoo/.ssh
+        ssh-keyscan github.com  >> /opt/odoo/.ssh/known_hosts
+        chown -R odoo:odoo /opt/odoo/.ssh
+        chmod 600 /opt/odoo/.ssh/*
+        echo $log_src[`date +%F.%H:%M:%S`]' Downloading additional addons...'
+        sudo -i -u odoo python /opt/odoo/auto_addons/addons.py $ADDONS_REPO $FETCH_OCA_DEPENDENCIES
+    else
+        echo $log_src[`date +%F.%H:%M:%S`]' No additional addons to download'
+        # FIXME this script should be replaced with the code from commit 6076053
+        sudo -i -u odoo python /opt/odoo/auto_addons/no_addons.py
+    fi
+
+    echo $log_src[`date +%F.%H:%M:%S`]' Checking special requirements...'
+    bash /mnt/scripts/startup.sh
+
+    echo $log_src[`date +%F.%H:%M:%S`]' Running odoo...'
     set +e
     if [ ! -e $1 ]; then
-        echo "...with additional args: $*"
+        echo $log_src[`date +%F.%H:%M:%S`]' ...with additional args: $*'
     fi
     sudo -i -u odoo /usr/bin/python \
                     /opt/odoo/sources/odoo/openerp-server \
@@ -47,19 +83,14 @@ function on_exit() {
 }
 trap on_exit INT TERM
 
-echo "Search conf file"
+echo $log_src[`date +%F.%H:%M:%S`]' Search conf file'
 if [[ -z "$ODOO_CONF" ]];
 then
     file="/opt/odoo/etc/odoo.conf"
 else
     file=$ODOO_CONF
 fi
-if [ ! -f "$file" ]; then
-    cp /opt/sources/odoo.conf $file 
-    echo "Copy template as conf file $file"
-fi
-chown -R odoo /opt/odoo
-echo "Running command..."
+echo $log_src[`date +%F.%H:%M:%S`]' Running command...'
 for arg in "$*"
 do
     $arg

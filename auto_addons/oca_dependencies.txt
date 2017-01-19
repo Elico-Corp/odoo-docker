@@ -1,0 +1,1 @@
+# Instructions: https://github.com/OCA/maintainer-quality-tools/blob/master/sample_files/oca_dependencies.txt

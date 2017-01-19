@@ -10,7 +10,7 @@ RUN echo 'LANG="en_US.UTF-8"' > /etc/default/locale
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
 
 # Add PostgreSQL's repository. It contains the most recent stable release
-#     of PostgreSQL, ``9.4``.
+#     of PostgreSQL, ``9.5``.
 # install dependencies as distrib packages when system bindings are required
 # some of them extend the basic odoo requirements for a better "apps" compatibility
 # most dependencies are distributed as wheel packages at the next step
@@ -19,7 +19,7 @@ RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main" > /etc/
   apt-get -yq install \
     adduser \
     ghostscript \
-    postgresql-client-9.4 \
+    postgresql-client-9.5 \
     python \
     python-pip \
     python-imaging \

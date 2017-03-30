@@ -28,7 +28,7 @@ pycparser==2.10
 pydot==1.0.2
 pyjon.utils==0.7
 pyOpenSSL==0.14
-pyparsing==2.0.3
+pyparsing==2.1.10
 pyPdf==1.13
 pyserial==2.7
 Python-Chart==1.39

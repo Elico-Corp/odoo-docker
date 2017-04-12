@@ -22,3 +22,20 @@ For private repo:
 * git@github.com:Elico-Corp/private-repo 8.0
 * private_repo_rename git@github.com:Elico-Corp/private-repo
 * private_repo_rename git@github.com:Elico-Corp/private-repo 8.0
+
+Usage:
+
+config docker-compose.yml
+
+volumes:
+* ./volumes/odoo/[project name]/odoo_data:/opt/odoo/data/filestore
+* ./volumes/odoo/[project name]/extra_addons:/opt/odoo/additional_addons
+* ./volumes/odoo/[project name]/ssh:/mnt/ssh
+
+environment:
+* ADDONS_REPO=git@github.com:xxx/xxx
+* FETCH_OCA_DEPENDENCIES=False
+* ADMIN_PASSWORD=xxx
+* DB_USER=xxx
+* DB_PASSWORD=xxx
+* DB_FILTER=^xxx.*

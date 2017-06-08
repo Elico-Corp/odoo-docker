@@ -47,7 +47,7 @@ function start {
     if [ "$ADDONS_REPO" ]; then
         echo $log_src[`date +%F.%H:%M:%S`]' Setting up SSH key'
         cp -R /mnt/ssh /opt/odoo/.ssh
-        ssh-keyscan github.com  >> /opt/odoo/.ssh/known_hosts
+        ssh-keyscan github.com >> /opt/odoo/.ssh/known_hosts
         chown -R odoo:odoo /opt/odoo/.ssh
         chmod 600 /opt/odoo/.ssh/*
         echo $log_src[`date +%F.%H:%M:%S`]' Downloading additional addons...'

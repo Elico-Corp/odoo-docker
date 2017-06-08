@@ -63,6 +63,19 @@ RUN easy_install -UZ py3o.template
 ADD https://downloads.wkhtmltopdf.org/0.12/0.12.1/wkhtmltox-0.12.1_linux-trusty-amd64.deb /opt/sources/wkhtmltox.deb
 RUN dpkg -i /opt/sources/wkhtmltox.deb
 
+ADD scripts /mnt/scripts
+RUN mkdir /mnt/ssh
+
+VOLUME ["/mnt/scripts", "/mnt/ssh"]
+
+# Set the default entrypoint (non overridable) to run when starting the container
+ADD bin /app/bin/
+ENTRYPOINT ["/app/bin/boot"]
+CMD ["help"]
+
+# Expose the odoo ports (for linked containers)
+EXPOSE 8069 8072
+
 # create the odoo user
 RUN adduser --home=/opt/odoo --disabled-password --gecos "" --shell=/bin/bash odoo
 
@@ -84,15 +97,7 @@ ADD auto_addons /opt/odoo/auto_addons
 RUN git config --global user.email "contact@elico-corp.com"
 RUN git config --global user.name "Elico Corp Odoo Docker"
 
+VOLUME ["/opt/odoo/var", "/opt/odoo/etc", "/opt/odoo/additional_addons", "/opt/odoo/data"]
+
 # Execution environment
 USER 0
-ADD scripts /mnt/scripts
-RUN mkdir /mnt/ssh
-WORKDIR /app
-VOLUME ["/opt/odoo/var", "/opt/odoo/etc", "/opt/odoo/additional_addons", "/opt/odoo/data", "/mnt/scripts", "/mnt/ssh"]
-# Set the default entrypoint (non overridable) to run when starting the container
-ENTRYPOINT ["/app/bin/boot"]
-CMD ["help"]
-# Expose the odoo ports (for linked containers)
-EXPOSE 8069 8072
-ADD bin /app/bin/

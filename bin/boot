@@ -28,7 +28,7 @@ function login  {
 
 function start {
     echo $log_src[`date +%F.%H:%M:%S`]' Checking special requirements...'
-    bash /mnt/scripts/startup.sh
+    bash /opt/scripts/startup.sh
 
     echo $log_src[`date +%F.%H:%M:%S`]' Updating Odoo conf...'
     if [ "$ADMIN_PASSWORD" ]; then

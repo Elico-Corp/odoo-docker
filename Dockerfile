@@ -63,9 +63,9 @@ RUN easy_install -UZ py3o.template
 ADD https://downloads.wkhtmltopdf.org/0.12/0.12.1/wkhtmltox-0.12.1_linux-trusty-amd64.deb /opt/sources/wkhtmltox.deb
 RUN dpkg -i /opt/sources/wkhtmltox.deb
 
-# Folder for the startup script
-ADD scripts /mnt/scripts
-VOLUME ["/mnt/scripts"]
+# Startup script for custom setup
+ADD scripts/startup.sh /opt/scripts/startup.sh
+VOLUME ["/opt/scripts"]
 
 # Set the default entrypoint (non overridable) to run when starting the container
 ADD bin /app/bin/
@@ -96,7 +96,7 @@ ADD auto_addons /opt/odoo/auto_addons
 # Avoid git warning when cloning/pulling extra addons
 # FIXME move to boot to user target user
 RUN git config --global user.email "contact@elico-corp.com"
-RUN git config --global user.name "Elico Corp - Odoo Docker"
+RUN git config --global user.name "Elico Corp Odoo Docker"
 
 # Provide read/write access to group (for host user mapping)
 RUN chmod 775 -R /opt/odoo

@@ -49,42 +49,26 @@ function start {
         sudo -i -u \#$TARGET_ID git config --global user.email "contact@elico-corp.com"
         sudo -i -u \#$TARGET_ID git config --global user.name "Elico Corp - Odoo Docker"
 
-        # FIXME git clone/pull by SSH key doesn't work.
-        #
-        # 1st execution, it fails and loops over:
-        #
-        # Cloning into '/opt/odoo/additional_addons/<GitHub repo>'...
-        # Warning: Permanently added the RSA host key for IP address '192.30.255.112' to the list of known hosts.
-        # Permission denied (publickey).
-        # fatal: Could not read from remote repository.
-        # Please make sure you have the correct access rights
-        # and the repository exists.
-        #
-        # 2nd execution (folder exists with only .git inside), it fails (but doesn't loop) after:
-        #
-        # Warning: Permanently added the RSA host key for IP address '192.30.255.112' to the list of known hosts.
-        # Permission denied (publickey).
-        # fatal: Could not read from remote repository.
-        # Please make sure you have the correct access rights
-        # and the repository exists.
-        #
-        echo $log_src[`date +%F.%H:%M:%S`]' Setting up SSH key...'
-        SSH_FOLDER=$( getent passwd $TARGET_ID | cut -d: -f6 )/.ssh
-        echo $log_src[`date +%F.%H:%M:%S`]' Creating SSH folder = '$SSH_FOLDER
-        mkdir $SSH_FOLDER
-        echo $log_src[`date +%F.%H:%M:%S`]' Copy SSH private key from /opt/odoo/ssh'
-        cp /opt/odoo/ssh/id_rsa $SSH_FOLDER
-        echo $log_src[`date +%F.%H:%M:%S`]' Scanning GitHub key...'
-        ssh-keyscan github.com > $SSH_FOLDER/known_hosts
-        echo $log_src[`date +%F.%H:%M:%S`]' Setup SSH config...'
-        echo "host github.com" > $SSH_FOLDER/config
-        echo "    HostName github.com" >> $SSH_FOLDER/config
-        echo "    User git" >> $SSH_FOLDER/config
-        echo "    IdentityFile $SSH_FOLDER/id_rsa" >> $SSH_FOLDER/config
-        echo $log_src[`date +%F.%H:%M:%S`]' Securing SSH folder...'
-        chown -R $TARGET_ID:$TARGET_ID $SSH_FOLDER
-        chmod 400 $SSH_FOLDER/id_rsa
-        echo $log_src[`date +%F.%H:%M:%S`]' Setup SSH key done'
+        echo $log_src[`date +%F.%H:%M:%S`]' Checking if need to setup SSH key...'
+        if [ -a /opt/odoo/ssh/id_rsa ]; then
+            echo $log_src[`date +%F.%H:%M:%S`]' Setting up SSH key...'
+            SSH_FOLDER=$( getent passwd $TARGET_ID | cut -d: -f6 )/.ssh
+            echo $log_src[`date +%F.%H:%M:%S`]' Creating SSH folder = '$SSH_FOLDER
+            mkdir $SSH_FOLDER
+            echo $log_src[`date +%F.%H:%M:%S`]' Copy SSH private key from /opt/odoo/ssh'
+            cp /opt/odoo/ssh/id_rsa $SSH_FOLDER
+            echo $log_src[`date +%F.%H:%M:%S`]' Scanning GitHub key...'
+            ssh-keyscan github.com > $SSH_FOLDER/known_hosts
+            echo $log_src[`date +%F.%H:%M:%S`]' Setup SSH config...'
+            echo "host github.com" > $SSH_FOLDER/config
+            echo "    HostName github.com" >> $SSH_FOLDER/config
+            echo "    User git" >> $SSH_FOLDER/config
+            echo "    IdentityFile $SSH_FOLDER/id_rsa" >> $SSH_FOLDER/config
+            echo $log_src[`date +%F.%H:%M:%S`]' Securing SSH folder...'
+            chown -R $TARGET_ID:$TARGET_ID $SSH_FOLDER
+            chmod 400 $SSH_FOLDER/id_rsa
+            echo $log_src[`date +%F.%H:%M:%S`]' Setup SSH key done'
+        fi
 
         echo $log_src[`date +%F.%H:%M:%S`]' Downloading additional addons...'
         sudo -i -u \#$TARGET_ID python /opt/odoo/auto_addons/addons.py $ADDONS_REPO $FETCH_OCA_DEPENDENCIES

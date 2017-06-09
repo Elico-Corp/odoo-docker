@@ -75,28 +75,21 @@ CMD ["help"]
 # Expose the odoo ports (for linked containers)
 EXPOSE 8069 8072
 
-# create the odoo user
-RUN adduser --home=/opt/odoo --disabled-password --gecos "" --shell=/bin/bash odoo
-
-# changing user is required by openerp which won't start with root
-# makes the container more unlikely to be unwillingly changed in interactive mode
-USER odoo
-
 RUN mkdir -p /opt/odoo/{bin,etc,sources/odoo,additional_addons,data,ssh}
 RUN mkdir -p /opt/odoo/var/{run,log,egg-cache}
 
 ADD sources/odoo.conf /opt/odoo/etc/odoo.conf
 ADD auto_addons /opt/odoo/auto_addons
 
-# Provide read/write access to group (for host user mapping)
-RUN chmod 775 -R /opt/odoo
-
 # Add Odoo OCB sources and remove .git folder in order to reduce image size
 WORKDIR /opt/odoo/sources
 RUN git clone https://github.com/OCA/OCB.git -b 10.0 odoo && \
   rm -rf odoo/.git
 
-VOLUME ["/opt/odoo/var", "/opt/odoo/etc", "/opt/odoo/additional_addons", "/opt/odoo/data", "/opt/odoo/ssh"]
+# create the odoo user
+RUN adduser --home=/opt/odoo --disabled-password --gecos "" --shell=/bin/bash odoo
 
-# Execution environment
-USER 0
+# Provide read/write access to group (for host user mapping)
+RUN chown -R odoo:odoo /opt/odoo && chmod -R 775 /opt/odoo
+
+VOLUME ["/opt/odoo/var", "/opt/odoo/etc", "/opt/odoo/additional_addons", "/opt/odoo/data", "/opt/odoo/ssh"]

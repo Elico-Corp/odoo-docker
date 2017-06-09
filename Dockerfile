@@ -86,9 +86,8 @@ USER odoo
 RUN git config --global user.email "contact@elico-corp.com"
 RUN git config --global user.name "Elico Corp - Odoo Docker"
 
-RUN mkdir -p /opt/odoo/{bin,etc,sources/odoo,additional_addons,data}
+RUN mkdir -p /opt/odoo/{bin,etc,sources/odoo,additional_addons,data,ssh}
 RUN mkdir -p /opt/odoo/var/{run,log,egg-cache}
-RUN mkdir -p /mnt/ssh
 
 # Add Odoo OCB sources and remove .git folder in order to reduce image size
 WORKDIR /opt/odoo/sources
@@ -98,7 +97,7 @@ RUN git clone https://github.com/OCA/OCB.git -b 10.0 odoo && \
 ADD sources/odoo.conf /opt/odoo/etc/odoo.conf
 ADD auto_addons /opt/odoo/auto_addons
 
-VOLUME ["/mnt/ssh", "/opt/odoo/var", "/opt/odoo/etc", "/opt/odoo/additional_addons", "/opt/odoo/data"]
+VOLUME ["/opt/odoo/var", "/opt/odoo/etc", "/opt/odoo/additional_addons", "/opt/odoo/data", "/opt/odoo/ssh"]
 
 # Execution environment
 USER 0

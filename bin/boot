@@ -29,19 +29,19 @@ function login  {
 function start {
     echo $log_src[`date +%F.%H:%M:%S`]' Updating Odoo conf...'
     if [ "$ADMIN_PASSWORD" ]; then
-        sudo -i -u odoo sed -i "s/_ADMIN_PASSWORD_/$ADMIN_PASSWORD/g" /opt/odoo/etc/odoo.conf
+        sudo -i -u odoo sed -i "s/_ADMIN_PASSWORD_/$ADMIN_PASSWORD/g" $ODOO_CONF
     fi
 
     if [ "$DB_USER" ]; then
-        sudo -i -u odoo sed -i "s/_DB_USER_/$DB_USER/g" /opt/odoo/etc/odoo.conf
+        sudo -i -u odoo sed -i "s/_DB_USER_/$DB_USER/g" $ODOO_CONF
     fi
 
     if [ "$DB_PASSWORD" ]; then
-        sudo -i -u odoo sed -i "s/_DB_PASSWORD_/$DB_PASSWORD/g" /opt/odoo/etc/odoo.conf
+        sudo -i -u odoo sed -i "s/_DB_PASSWORD_/$DB_PASSWORD/g" $ODOO_CONF
     fi
 
     if [ "$DB_FILTER" ]; then
-        sudo -i -u odoo sed -i "s/_DB_FILTER_/$DB_FILTER/g" /opt/odoo/etc/odoo.conf
+        sudo -i -u odoo sed -i "s/_DB_FILTER_/$DB_FILTER/g" $ODOO_CONF
     fi
 
     if [ "$ADDONS_REPO" ]; then
@@ -68,7 +68,7 @@ function start {
     fi
     sudo -i -u odoo /usr/bin/python \
                     /opt/odoo/sources/odoo/odoo-bin \
-                    -c $file \
+                    -c $ODOO_CONF \
                     $*
 
     SERVICE_PID=$!
@@ -86,10 +86,9 @@ trap on_exit INT TERM
 echo $log_src[`date +%F.%H:%M:%S`]' Search conf file'
 if [[ -z "$ODOO_CONF" ]];
 then
-    file="/opt/odoo/etc/odoo.conf"
-else
-    file=$ODOO_CONF
+    ODOO_CONF="/opt/odoo/etc/odoo.conf"
 fi
+
 echo $log_src[`date +%F.%H:%M:%S`]' Running command...'
 for arg in "$*"
 do

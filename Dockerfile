@@ -51,7 +51,7 @@ RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main" > /etc/
 ADD sources/pip-req.txt /opt/sources/pip-req.txt
 RUN pip install -r /opt/sources/pip-req.txt
 
-# SM: Install LESS
+# Install LESS
 RUN npm install -g less less-plugin-clean-css && \
   ln -s /usr/bin/nodejs /usr/bin/node
 
@@ -63,10 +63,9 @@ RUN easy_install -UZ py3o.template
 ADD https://downloads.wkhtmltopdf.org/0.12/0.12.1/wkhtmltox-0.12.1_linux-trusty-amd64.deb /opt/sources/wkhtmltox.deb
 RUN dpkg -i /opt/sources/wkhtmltox.deb
 
+# Folder for the startup script
 ADD scripts /mnt/scripts
-RUN mkdir /mnt/ssh
-
-VOLUME ["/mnt/scripts", "/mnt/ssh"]
+VOLUME ["/mnt/scripts"]
 
 # Set the default entrypoint (non overridable) to run when starting the container
 ADD bin /app/bin/
@@ -83,8 +82,13 @@ RUN adduser --home=/opt/odoo --disabled-password --gecos "" --shell=/bin/bash od
 # makes the container more unlikely to be unwillingly changed in interactive mode
 USER odoo
 
-RUN /bin/bash -c "mkdir -p /opt/odoo/{bin,etc,sources/odoo,additional_addons,data}"
-RUN /bin/bash -c "mkdir -p /opt/odoo/var/{run,log,egg-cache}"
+# Avoid git warning when cloning/pulling extra addons
+RUN git config --global user.email "contact@elico-corp.com"
+RUN git config --global user.name "Elico Corp - Odoo Docker"
+
+RUN mkdir -p /opt/odoo/{bin,etc,sources/odoo,additional_addons,data}
+RUN mkdir -p /opt/odoo/var/{run,log,egg-cache}
+RUN mkdir -p /mnt/ssh
 
 # Add Odoo OCB sources and remove .git folder in order to reduce image size
 WORKDIR /opt/odoo/sources
@@ -94,10 +98,7 @@ RUN git clone https://github.com/OCA/OCB.git -b 10.0 odoo && \
 ADD sources/odoo.conf /opt/odoo/etc/odoo.conf
 ADD auto_addons /opt/odoo/auto_addons
 
-RUN git config --global user.email "contact@elico-corp.com"
-RUN git config --global user.name "Elico Corp Odoo Docker"
-
-VOLUME ["/opt/odoo/var", "/opt/odoo/etc", "/opt/odoo/additional_addons", "/opt/odoo/data"]
+VOLUME ["/mnt/ssh", "/opt/odoo/var", "/opt/odoo/etc", "/opt/odoo/additional_addons", "/opt/odoo/data"]
 
 # Execution environment
 USER 0

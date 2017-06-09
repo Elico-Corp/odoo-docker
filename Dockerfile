@@ -82,10 +82,6 @@ RUN adduser --home=/opt/odoo --disabled-password --gecos "" --shell=/bin/bash od
 # makes the container more unlikely to be unwillingly changed in interactive mode
 USER odoo
 
-# Avoid git warning when cloning/pulling extra addons
-RUN git config --global user.email "contact@elico-corp.com"
-RUN git config --global user.name "Elico Corp - Odoo Docker"
-
 RUN mkdir -p /opt/odoo/{bin,etc,sources/odoo,additional_addons,data,ssh}
 RUN mkdir -p /opt/odoo/var/{run,log,egg-cache}
 
@@ -96,6 +92,14 @@ RUN git clone https://github.com/OCA/OCB.git -b 10.0 odoo && \
 
 ADD sources/odoo.conf /opt/odoo/etc/odoo.conf
 ADD auto_addons /opt/odoo/auto_addons
+
+# Avoid git warning when cloning/pulling extra addons
+# FIXME move to boot to user target user
+RUN git config --global user.email "contact@elico-corp.com"
+RUN git config --global user.name "Elico Corp - Odoo Docker"
+
+# Provide read/write access to group (for host user mapping)
+RUN chmod 775 -R /opt/odoo
 
 VOLUME ["/opt/odoo/var", "/opt/odoo/etc", "/opt/odoo/additional_addons", "/opt/odoo/data", "/opt/odoo/ssh"]
 

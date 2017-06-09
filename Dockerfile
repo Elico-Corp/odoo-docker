@@ -63,8 +63,11 @@ RUN easy_install -UZ py3o.template
 ADD https://downloads.wkhtmltopdf.org/0.12/0.12.1/wkhtmltox-0.12.1_linux-trusty-amd64.deb /opt/sources/wkhtmltox.deb
 RUN dpkg -i /opt/sources/wkhtmltox.deb
 
+# Script to map the Odoo user with the host user (see FIXME inside)
+ADD sources/target_user.sh /opt/sources/target_user.sh
+
 # Startup script for custom setup
-ADD scripts/startup.sh /opt/scripts/startup.sh
+ADD sources/startup.sh /opt/scripts/startup.sh
 VOLUME ["/opt/scripts"]
 
 # Set the default entrypoint (non overridable) to run when starting the container

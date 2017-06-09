@@ -26,39 +26,71 @@ function login  {
     set -e
 }
 
+function _update_odoo_conf_param {
+    if [ "$1" ]; then
+        echo $log_src[`date +%F.%H:%M:%S`]' Replacing parameter '$2
+        sudo -i -u \#$TARGET_ID sed -i "s/$2/$1/g" $odoo_conf_file
+    fi
+}
+
 function start {
     echo $log_src[`date +%F.%H:%M:%S`]' Checking special requirements...'
     bash /opt/scripts/startup.sh
 
     echo $log_src[`date +%F.%H:%M:%S`]' Updating Odoo conf...'
-    if [ "$ADMIN_PASSWORD" ]; then
-        sudo -i -u odoo sed -i "s/_ADMIN_PASSWORD_/$ADMIN_PASSWORD/g" $ODOO_CONF
-    fi
-
-    if [ "$DB_USER" ]; then
-        sudo -i -u odoo sed -i "s/_DB_USER_/$DB_USER/g" $ODOO_CONF
-    fi
-
-    if [ "$DB_PASSWORD" ]; then
-        sudo -i -u odoo sed -i "s/_DB_PASSWORD_/$DB_PASSWORD/g" $ODOO_CONF
-    fi
-
-    if [ "$DB_FILTER" ]; then
-        sudo -i -u odoo sed -i "s/_DB_FILTER_/$DB_FILTER/g" $ODOO_CONF
-    fi
+    _update_odoo_conf_param $ADMIN_PASSWORD '_ADMIN_PASSWORD_'
+    _update_odoo_conf_param $DB_USER '_DB_USER_'
+    _update_odoo_conf_param $DB_PASSWORD '_DB_PASSWORD_'
+    _update_odoo_conf_param $DB_FILTER '_DB_FILTER_'
+    echo $log_src[`date +%F.%H:%M:%S`]' Update Odoo conf done'
 
     if [ "$ADDONS_REPO" ]; then
-        echo $log_src[`date +%F.%H:%M:%S`]' Setting up SSH key'
-        cp -R /opt/odoo/ssh /opt/odoo/.ssh
-        ssh-keyscan github.com >> /opt/odoo/.ssh/known_hosts
-        chown -R odoo:odoo /opt/odoo/.ssh
-        chmod 600 /opt/odoo/.ssh/*
+        echo $log_src[`date +%F.%H:%M:%S`]' Git config for target user'
+        sudo -i -u \#$TARGET_ID git config --global user.email "contact@elico-corp.com"
+        sudo -i -u \#$TARGET_ID git config --global user.name "Elico Corp - Odoo Docker"
+
+        # FIXME git clone/pull by SSH key doesn't work.
+        #
+        # 1st execution, it fails and loops over:
+        #
+        # Cloning into '/opt/odoo/additional_addons/<GitHub repo>'...
+        # Warning: Permanently added the RSA host key for IP address '192.30.255.112' to the list of known hosts.
+        # Permission denied (publickey).
+        # fatal: Could not read from remote repository.
+        # Please make sure you have the correct access rights
+        # and the repository exists.
+        #
+        # 2nd execution (folder exists with only .git inside), it fails (but doesn't loop) after:
+        #
+        # Warning: Permanently added the RSA host key for IP address '192.30.255.112' to the list of known hosts.
+        # Permission denied (publickey).
+        # fatal: Could not read from remote repository.
+        # Please make sure you have the correct access rights
+        # and the repository exists.
+        #
+        echo $log_src[`date +%F.%H:%M:%S`]' Setting up SSH key...'
+        SSH_FOLDER=$( getent passwd $TARGET_ID | cut -d: -f6 )/.ssh
+        echo $log_src[`date +%F.%H:%M:%S`]' Creating SSH folder = '$SSH_FOLDER
+        mkdir $SSH_FOLDER
+        echo $log_src[`date +%F.%H:%M:%S`]' Copy SSH private key from /opt/odoo/ssh'
+        cp /opt/odoo/ssh/id_rsa $SSH_FOLDER
+        echo $log_src[`date +%F.%H:%M:%S`]' Scanning GitHub key...'
+        ssh-keyscan github.com > $SSH_FOLDER/known_hosts
+        echo $log_src[`date +%F.%H:%M:%S`]' Setup SSH config...'
+        echo "host github.com" > $SSH_FOLDER/config
+        echo "    HostName github.com" >> $SSH_FOLDER/config
+        echo "    User git" >> $SSH_FOLDER/config
+        echo "    IdentityFile $SSH_FOLDER/id_rsa" >> $SSH_FOLDER/config
+        echo $log_src[`date +%F.%H:%M:%S`]' Securing SSH folder...'
+        chown -R $TARGET_ID:$TARGET_ID $SSH_FOLDER
+        chmod 400 $SSH_FOLDER/id_rsa
+        echo $log_src[`date +%F.%H:%M:%S`]' Setup SSH key done'
+
         echo $log_src[`date +%F.%H:%M:%S`]' Downloading additional addons...'
-        sudo -i -u odoo python /opt/odoo/auto_addons/addons.py $ADDONS_REPO $FETCH_OCA_DEPENDENCIES
+        sudo -i -u \#$TARGET_ID python /opt/odoo/auto_addons/addons.py $ADDONS_REPO $FETCH_OCA_DEPENDENCIES
     else
         echo $log_src[`date +%F.%H:%M:%S`]' No additional addons to download'
-        # FIXME this script should be replaced with the code from commit 6076053
-        sudo -i -u odoo python /opt/odoo/auto_addons/no_addons.py
+        sudo -i -u \#$TARGET_ID bash /opt/odoo/auto_addons/no_addons.sh $odoo_conf_file
     fi
 
     echo $log_src[`date +%F.%H:%M:%S`]' Running odoo...'
@@ -66,9 +98,9 @@ function start {
     if [ ! -e $1 ]; then
         echo $log_src[`date +%F.%H:%M:%S`]' ...with additional args: $*'
     fi
-    sudo -i -u odoo /usr/bin/python \
+    sudo -i -u \#$TARGET_ID /usr/bin/python \
                     /opt/odoo/sources/odoo/odoo-bin \
-                    -c $ODOO_CONF \
+                    -c $odoo_conf_file \
                     $*
 
     SERVICE_PID=$!
@@ -83,10 +115,17 @@ function on_exit() {
 }
 trap on_exit INT TERM
 
-echo $log_src[`date +%F.%H:%M:%S`]' Search conf file'
-if [[ -z "$ODOO_CONF" ]];
-then
-    ODOO_CONF="/opt/odoo/etc/odoo.conf"
+echo $log_src[`date +%F.%H:%M:%S`]' Search for target user...'
+bash /opt/sources/target_user.sh
+
+if [[ -z "$TARGET_ID" ]]; then
+    echo $log_src[`date +%F.%H:%M:%S`]' No target user, falling back to odoo'
+    TARGET_ID=$( id -u odoo )
+fi
+
+echo $log_src[`date +%F.%H:%M:%S`]' Search conf file...'
+if [[ -z "$odoo_conf_file" ]]; then
+    odoo_conf_file="/opt/odoo/etc/odoo.conf"
 fi
 
 echo $log_src[`date +%F.%H:%M:%S`]' Running command...'

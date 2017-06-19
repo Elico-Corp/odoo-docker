@@ -72,18 +72,17 @@ ADD sources/target_user.sh /opt/sources/target_user.sh
 
 # Startup script for custom setup
 ADD sources/startup.sh /opt/scripts/startup.sh
-VOLUME ["/opt/scripts"]
 
 # create the odoo user
 RUN adduser --home=/opt/odoo --disabled-password --gecos "" --shell=/bin/bash odoo
 
-# Switch to user odoo to create the volumes, else the corresponding folders will be
-# created by root on the host
+# Switch to user odoo to create the folders mapped with volumes, else the corresponding
+# folders will be created by root on the host
 USER odoo
 
 # If the folders are created with "RUN mkdir" command, they will belong to root
 # instead of odoo! Hence the "RUN /bin/bash -c" trick.
-RUN /bin/bash -c "mkdir -p /opt/odoo/{bin,etc,sources/odoo,additional_addons,data}"
+RUN /bin/bash -c "mkdir -p /opt/odoo/{bin,etc,sources/odoo,additional_addons,data,ssh}"
 RUN /bin/bash -c "mkdir -p /opt/odoo/var/{run,log,egg-cache}"
 
 ADD sources/odoo.conf /opt/odoo/etc/odoo.conf
@@ -94,18 +93,20 @@ WORKDIR /opt/odoo/sources
 RUN git clone https://github.com/OCA/OCB.git -b 10.0 odoo && \
   rm -rf odoo/.git
 
+User 0
+
+# Provide read/write access to group (for host user mapping)
+# Needs to be done before creating the volumes
+RUN chmod -R 775 /opt/odoo && chown -R odoo:odoo /opt/odoo
+
 VOLUME [ \
   "/opt/odoo/var", \
   "/opt/odoo/etc", \
   "/opt/odoo/additional_addons", \
   "/opt/odoo/data", \
-  "/opt/odoo/ssh" \
+  "/opt/odoo/ssh", \
+  "/opt/scripts" \
 ]
-
-User 0
-
-# Provide read/write access to group (for host user mapping)
-RUN chown -R odoo:odoo /opt/odoo && chmod -R 775 /opt/odoo
 
 # Set the default entrypoint (non overridable) to run when starting the container
 ADD bin /app/bin/

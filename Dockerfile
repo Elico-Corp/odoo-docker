@@ -95,4 +95,9 @@ RUN adduser --home=/opt/odoo --disabled-password --gecos "" --shell=/bin/bash od
 # Provide read/write access to group (for host user mapping)
 RUN chown -R odoo:odoo /opt/odoo && chmod -R 775 /opt/odoo
 
+# Switch to user odoo to create the volumes, else the corresponding folders will be created by root on the host
+USER odoo
+
 VOLUME ["/opt/odoo/var", "/opt/odoo/etc", "/opt/odoo/additional_addons", "/opt/odoo/data", "/opt/odoo/ssh"]
+
+User 0

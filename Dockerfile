@@ -102,12 +102,12 @@ WORKDIR /opt/odoo/sources
 RUN git clone https://github.com/OCA/OCB.git -b 10.0 odoo && \
   rm -rf odoo/.git
 
-VOLUME [
-  "/opt/odoo/var",
-  "/opt/odoo/etc",
-  "/opt/odoo/additional_addons",
-  "/opt/odoo/data",
-  "/opt/odoo/ssh"
+VOLUME [ \
+  "/opt/odoo/var", \
+  "/opt/odoo/etc", \
+  "/opt/odoo/additional_addons", \
+  "/opt/odoo/data", \
+  "/opt/odoo/ssh" \
 ]
 
 User 0

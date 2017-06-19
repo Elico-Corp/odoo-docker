@@ -74,14 +74,6 @@ ADD sources/target_user.sh /opt/sources/target_user.sh
 ADD sources/startup.sh /opt/scripts/startup.sh
 VOLUME ["/opt/scripts"]
 
-# Set the default entrypoint (non overridable) to run when starting the container
-ADD bin /app/bin/
-ENTRYPOINT ["/app/bin/boot"]
-CMD ["help"]
-
-# Expose the odoo ports (for linked containers)
-EXPOSE 8069 8072
-
 # create the odoo user
 RUN adduser --home=/opt/odoo --disabled-password --gecos "" --shell=/bin/bash odoo
 
@@ -114,3 +106,11 @@ User 0
 
 # Provide read/write access to group (for host user mapping)
 RUN chown -R odoo:odoo /opt/odoo && chmod -R 775 /opt/odoo
+
+# Set the default entrypoint (non overridable) to run when starting the container
+ADD bin /app/bin/
+ENTRYPOINT ["/app/bin/boot"]
+CMD ["help"]
+
+# Expose the odoo ports (for linked containers)
+EXPOSE 8069 8072

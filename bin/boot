@@ -44,7 +44,8 @@ function start {
     _update_odoo_conf_param $DB_FILTER '_DB_FILTER_'
     echo $log_src[`date +%F.%H:%M:%S`]' Update Odoo conf done'
 
-    if [ "$ADDONS_REPO" ]; then
+    echo $log_src[`date +%F.%H:%M:%S`]' Check if need to download addons repo...'
+    if [ "$ADDONS_REPO" -o -a /opt/odoo/additional_addons/oca_dependencies.txt ]; then
         echo $log_src[`date +%F.%H:%M:%S`]' Git config for target user'
         sudo -i -u \#$TARGET_ID git config --global user.email "contact@elico-corp.com"
         sudo -i -u \#$TARGET_ID git config --global user.name "Elico Corp - Odoo Docker"
@@ -70,8 +71,13 @@ function start {
             echo $log_src[`date +%F.%H:%M:%S`]' Setup SSH key done'
         fi
 
+        if [[ -z "$FETCH_OCA_DEPENDENCIES" ]]; then
+            echo $log_src[`date +%F.%H:%M:%S`]' Fetch dependencies undefined, set to True'
+            FETCH_OCA_DEPENDENCIES=True
+        fi
+
         echo $log_src[`date +%F.%H:%M:%S`]' Downloading additional addons...'
-        sudo -i -u \#$TARGET_ID python /opt/odoo/auto_addons/addons.py $ADDONS_REPO $FETCH_OCA_DEPENDENCIES
+        sudo -i -u \#$TARGET_ID python /opt/odoo/auto_addons/addons.py $FETCH_OCA_DEPENDENCIES $ADDONS_REPO
     else
         echo $log_src[`date +%F.%H:%M:%S`]' No additional addons to download'
         sudo -i -u \#$TARGET_ID bash /opt/odoo/auto_addons/no_addons.sh $odoo_conf_file

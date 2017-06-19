@@ -85,13 +85,13 @@ USER odoo
 RUN /bin/bash -c "mkdir -p /opt/odoo/{bin,etc,sources/odoo,additional_addons,data,ssh}"
 RUN /bin/bash -c "mkdir -p /opt/odoo/var/{run,log,egg-cache}"
 
-ADD sources/odoo.conf /opt/odoo/etc/odoo.conf
-ADD auto_addons /opt/odoo/auto_addons
-
 # Add Odoo OCB sources and remove .git folder in order to reduce image size
 WORKDIR /opt/odoo/sources
 RUN git clone https://github.com/OCA/OCB.git -b 10.0 odoo && \
   rm -rf odoo/.git
+
+ADD sources/odoo.conf /opt/odoo/etc/odoo.conf
+ADD auto_addons /opt/odoo/auto_addons
 
 User 0
 

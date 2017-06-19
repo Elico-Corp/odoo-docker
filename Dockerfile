@@ -78,6 +78,12 @@ CMD ["help"]
 # Expose the odoo ports (for linked containers)
 EXPOSE 8069 8072
 
+# create the odoo user
+RUN adduser --home=/opt/odoo --disabled-password --gecos "" --shell=/bin/bash odoo
+
+# Switch to user odoo to create the volumes, else the corresponding folders will be created by root on the host
+USER odoo
+
 RUN mkdir -p /opt/odoo/{bin,etc,sources/odoo,additional_addons,data,ssh}
 RUN mkdir -p /opt/odoo/var/{run,log,egg-cache}
 
@@ -89,15 +95,9 @@ WORKDIR /opt/odoo/sources
 RUN git clone https://github.com/OCA/OCB.git -b 10.0 odoo && \
   rm -rf odoo/.git
 
-# create the odoo user
-RUN adduser --home=/opt/odoo --disabled-password --gecos "" --shell=/bin/bash odoo
-
-# Provide read/write access to group (for host user mapping)
-RUN chown -R odoo:odoo /opt/odoo && chmod -R 775 /opt/odoo
-
-# Switch to user odoo to create the volumes, else the corresponding folders will be created by root on the host
-USER odoo
-
 VOLUME ["/opt/odoo/var", "/opt/odoo/etc", "/opt/odoo/additional_addons", "/opt/odoo/data", "/opt/odoo/ssh"]
 
 User 0
+
+# Provide read/write access to group (for host user mapping)
+RUN chown -R odoo:odoo /opt/odoo && chmod -R 775 /opt/odoo

@@ -26,7 +26,3 @@ https://hub.docker.com/r/xcgd/odoo/
       1. append a user defined odoo.conf to the one in the image (add this user defined
       odoo.conf by Dockerfile or by volume)
       2. or use ENV variables to customize parameters (I'm more in favor of that solution)
-* Allow pulling GitHub repos using an oca_dependencies.txt file rather than the ENV variable
-  $ADDONS_REPO. This way, it will be possible to pull multiple repos not necessarily linked to
-  each other (e.g. OCA/business_requirements and odoo_enterprise). One solution would be to put
-  this file at the root of extra_addons.

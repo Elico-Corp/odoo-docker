@@ -7,14 +7,16 @@ RUN echo 'LANG="en_US.UTF-8"' > /etc/default/locale
 
 # Add the PostgreSQL PGP key to verify their Debian packages.
 # It should be the same key as https://www.postgresql.org/media/keys/ACCC4CF8.asc
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
+RUN apt-key adv --keyserver keyserver.ubuntu.com \
+  --recv-keys B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
 
 # Add PostgreSQL's repository. It contains the most recent stable release
 #     of PostgreSQL, ``9.5``.
 # install dependencies as distrib packages when system bindings are required
 # some of them extend the basic odoo requirements for a better "apps" compatibility
 # most dependencies are distributed as wheel packages at the next step
-RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main" > /etc/apt/sources.list.d/pgdg.list && \
+RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main" > \
+  /etc/apt/sources.list.d/pgdg.list && \
   apt-get update && \
   apt-get -yq install \
     adduser \
@@ -59,7 +61,8 @@ RUN npm install -g less less-plugin-clean-css && \
 RUN easy_install -UZ py3o.template
 
 # install wkhtmltopdf based on QT5
-# Warning: do not use latest version (0.12.2.1) because it causes the footer issue (see https://github.com/odoo/odoo/issues/4806)
+# Warning: do not use latest version (0.12.2.1) because it causes the footer
+# issue (see https://github.com/odoo/odoo/issues/4806)
 ADD https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.1/wkhtmltox-0.12.1_linux-trusty-amd64.deb /opt/sources/wkhtmltox.deb
 RUN dpkg -i /opt/sources/wkhtmltox.deb
 
@@ -81,11 +84,14 @@ EXPOSE 8069 8072
 # create the odoo user
 RUN adduser --home=/opt/odoo --disabled-password --gecos "" --shell=/bin/bash odoo
 
-# Switch to user odoo to create the volumes, else the corresponding folders will be created by root on the host
+# Switch to user odoo to create the volumes, else the corresponding folders will be
+# created by root on the host
 USER odoo
 
-RUN mkdir -p /opt/odoo/{bin,etc,sources/odoo,additional_addons,data,ssh}
-RUN mkdir -p /opt/odoo/var/{run,log,egg-cache}
+# If the folders are created with "RUN mkdir" command, they will belong to root
+# instead of odoo! Hence the "RUN /bin/bash -c" trick.
+RUN /bin/bash -c "mkdir -p /opt/odoo/{bin,etc,sources/odoo,additional_addons,data}"
+RUN /bin/bash -c "mkdir -p /opt/odoo/var/{run,log,egg-cache}"
 
 ADD sources/odoo.conf /opt/odoo/etc/odoo.conf
 ADD auto_addons /opt/odoo/auto_addons
@@ -95,7 +101,13 @@ WORKDIR /opt/odoo/sources
 RUN git clone https://github.com/OCA/OCB.git -b 10.0 odoo && \
   rm -rf odoo/.git
 
-VOLUME ["/opt/odoo/var", "/opt/odoo/etc", "/opt/odoo/additional_addons", "/opt/odoo/data", "/opt/odoo/ssh"]
+VOLUME [
+  "/opt/odoo/var",
+  "/opt/odoo/etc",
+  "/opt/odoo/additional_addons",
+  "/opt/odoo/data",
+  "/opt/odoo/ssh"
+]
 
 User 0
 

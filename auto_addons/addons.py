@@ -22,28 +22,6 @@ REGEX_ADDONS_PATH = r'^addons_path\s*=\s*'
 
 
 class Repo(object):
-    """
-    oca_dependencies.txt
-
-    For public repo:
-
-    oca-repo -> https://github.com/OCA/oca-repo (default branch)
-    oca-repo 8.0 -> https://github.com/OCA/oca-repo (branch: 8.0)
-    organization/public-repo -> https://github.com/organization/public-repo (default branch)
-    organization/public-repo 8.0 -> https://github.com/organization/public-repo (branch: 8.0)
-    https://github.com/organization/public-repo -> https://github.com/organization/public-repo (default branch)
-    https://github.com/organization/public-repo 8.0 -> https://github.com/organization/public-repo (branch: 8.0)
-    public_repo_rename https://github.com/organization/public-repo -> https://github.com/organization/public-repo (default branch)
-    public_repo_rename https://github.com/organization/public-repo 8.0 -> https://github.com/organization/public-repo (branch: 8.0)
-
-    For private repo:
-
-    git@github.com:Elico-Corp/private-repo
-    git@github.com:Elico-Corp/private-repo 8.0
-    private_repo_rename git@github.com:Elico-Corp/private-repo
-    private_repo_rename git@github.com:Elico-Corp/private-repo 8.0
-
-    """
     def __init__(self, remote_url, parent=None):
         if parent:
             self.parent = parent

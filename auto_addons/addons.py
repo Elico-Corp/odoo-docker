@@ -60,10 +60,14 @@ class Repo(object):
         self._parse()
 
     def _set_branch(self, branch):
+<<<<<<< HEAD
         if branch:
             self.branch = branch
         else:
             self.branch = self.parent.branch
+=======
+        self.branch = branch if branch else self.parent.branch
+>>>>>>> e8c1e14bf16130cc5e22cc8d46309bea2956187c
 
     def _check_is_ssh(self, url):
         # TODO For other hosting services, this part should be dynamic.
@@ -75,12 +79,17 @@ class Repo(object):
             return True
 
     def _check_is_url(self, url):
+<<<<<<< HEAD
         if re.match(r'^https?:/{2}\w.+$', url):
             return True
         else:
             if self._check_is_ssh(url):
                 return True
             return False
+=======
+        return re.match(r'^https?:/{2}\w.+$', url) \
+            or self._check_is_ssh(url)
+>>>>>>> e8c1e14bf16130cc5e22cc8d46309bea2956187c
 
     def fetch_branch_name(self):
         branch_cmd = 'git --git-dir=%s/.git --work-tree=%s branch' % (
@@ -196,11 +205,19 @@ class Repo(object):
             )
             return cmd.split()
 
+<<<<<<< HEAD
     def download(self, parent=None, is_loop=False, fetch_oca_dependencies=False):
         if self.path in ADDONS_PATH:
             return
         if os.path.exists(self.path):
             if fetch_oca_dependencies:
+=======
+    def download(self, parent=None, is_loop=False, fetch_dep=True):
+        if self.path in ADDONS_PATH:
+            return
+        if os.path.exists(self.path):
+            if fetch_dep:
+>>>>>>> e8c1e14bf16130cc5e22cc8d46309bea2956187c
                 print('PULL: %s %s' % (self.path, self.branch))
                 cmd = self.update_cmd
                 call(cmd)
@@ -215,20 +232,34 @@ class Repo(object):
                     self.download(
                         parent=parent.parent,
                         is_loop=True,
+<<<<<<< HEAD
                         fetch_oca_dependencies=fetch_oca_dependencies)
+=======
+                        fetch_dep=fetch_dep)
+>>>>>>> e8c1e14bf16130cc5e22cc8d46309bea2956187c
                 else:
                     self.branch = None
                     self.download(
                         is_loop=True,
+<<<<<<< HEAD
                         fetch_oca_dependencies=fetch_oca_dependencies)
+=======
+                        fetch_dep=fetch_dep)
+>>>>>>> e8c1e14bf16130cc5e22cc8d46309bea2956187c
             else:
                 self.fetch_branch_name()
 
         if not is_loop:
             ADDONS_PATH.append(self.path)
+<<<<<<< HEAD
             self.download_dependency(fetch_oca_dependencies)
 
     def download_dependency(self, fetch_oca_dependencies=False):
+=======
+            self.download_dependency(fetch_dep)
+
+    def download_dependency(self, fetch_dep=True):
+>>>>>>> e8c1e14bf16130cc5e22cc8d46309bea2956187c
         filename = '%s/%s' % (self.path, DEPENDENCIES_FILE)
         if not os.path.exists(filename):
             return
@@ -242,7 +273,11 @@ class Repo(object):
         for repo in repo_list:
             repo.download(
                 parent=repo.parent,
+<<<<<<< HEAD
                 fetch_oca_dependencies=fetch_oca_dependencies)
+=======
+                fetch_dep=fetch_dep)
+>>>>>>> e8c1e14bf16130cc5e22cc8d46309bea2956187c
 
 
 def write_addons_path():
@@ -259,6 +294,7 @@ def write_addons_path():
 
 
 def main():
+<<<<<<< HEAD
     remote_url = None
     fetch_oca_dependencies = True
 
@@ -272,6 +308,39 @@ def main():
         print('remote_url: %s ' % remote_url)
         Repo(remote_url).download(
             fetch_oca_dependencies=fetch_oca_dependencies)
+=======
+    fetch_dep = True
+    remote_url = None
+
+    # 1st param is FETCH_OCA_DEPENDENCIES
+    if len(sys.argv) > 1:
+        if str(sys.argv[1]).lower() == 'false':
+            fetch_dep = False
+
+    # 2nd param is the ADDONS_REPO
+    if len(sys.argv) > 2:
+        remote_url = sys.argv[2]
+
+    # If the ADDONS_REPO contains a branch name, there is a space before the
+    # branch name so the branch name becomes the 3rd param
+    if len(sys.argv) > 3:
+        remote_url += ' ' + sys.argv[3]
+
+    if remote_url:
+        # Only one master repo to download
+        print('remote_url: %s ' % remote_url)
+        Repo(remote_url).download(fetch_dep=fetch_dep)
+    else:
+        # List of repos is defined in oca_dependencies.txt at the root of
+        # additional_addons folder, let's download them all
+        with open(EXTRA_ADDONS_PATH + DEPENDENCIES_FILE, 'r') as f:
+            for line in f:
+                l = line.strip('\n').strip()
+                if l.startswith('#') or not l:
+                    continue
+                print('remote_url: %s ' % l)
+                Repo(l).download(fetch_dep=fetch_dep)
+>>>>>>> e8c1e14bf16130cc5e22cc8d46309bea2956187c
 
     write_addons_path()
 

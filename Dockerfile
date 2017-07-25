@@ -7,14 +7,16 @@ RUN echo 'LANG="en_US.UTF-8"' > /etc/default/locale
 
 # Add the PostgreSQL PGP key to verify their Debian packages.
 # It should be the same key as https://www.postgresql.org/media/keys/ACCC4CF8.asc
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
+RUN apt-key adv --keyserver keyserver.ubuntu.com \
+  --recv-keys B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
 
 # Add PostgreSQL's repository. It contains the most recent stable release
 #     of PostgreSQL, ``9.5``.
 # install dependencies as distrib packages when system bindings are required
 # some of them extend the basic odoo requirements for a better "apps" compatibility
 # most dependencies are distributed as wheel packages at the next step
-RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main" > /etc/apt/sources.list.d/pgdg.list && \
+RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main" > \
+  /etc/apt/sources.list.d/pgdg.list && \
   apt-get update && \
   apt-get -yq install \
     adduser \
@@ -27,9 +29,9 @@ RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main" > /etc/
     libxrender1 libxext6 fontconfig \
     python-zsi \
     python-lasso \
-    # SM: libpq-dev is needed to install pg_config which is required by psycopg2
+    # libpq-dev is needed to install pg_config which is required by psycopg2
     libpq-dev \
-    # SM: These libraries are needed to install the pip modules
+    # These libraries are needed to install the pip modules
     python-dev \
     libffi-dev \
     libxml2-dev \
@@ -37,9 +39,9 @@ RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main" > /etc/
     libldap2-dev \
     libsasl2-dev \
     libssl-dev \
-    # SM: This library is necessary to upgrade PIL/pillow module
+    # This library is necessary to upgrade PIL/pillow module
     libjpeg8-dev \
-    # SM: Git is required to clone Odoo OCB project
+    # Git is required to clone Odoo OCB project
     git
 
 # Install Odoo python dependencies
@@ -50,18 +52,28 @@ RUN pip install -r /opt/sources/pip-req.txt
 RUN easy_install -UZ py3o.template
 
 # install wkhtmltopdf based on QT5
-# Warning: do not use latest version (0.12.2.1) because it causes the footer issue (see https://github.com/odoo/odoo/issues/4806)
-ADD https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.1/wkhtmltox-0.12.1_linux-trusty-amd64.deb /opt/sources/wkhtmltox.deb
+# Warning: do not use latest version (0.12.2.1) because it causes the footer
+# issue (see https://github.com/odoo/odoo/issues/4806)
+ADD https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.1/wkhtmltox-0.12.1_linux-trusty-amd64.deb \
+  /opt/sources/wkhtmltox.deb
 RUN dpkg -i /opt/sources/wkhtmltox.deb
+
+# Script to map the Odoo user with the host user (see FIXME inside)
+ADD sources/target_user.sh /opt/sources/target_user.sh
+
+# Startup script for custom setup
+ADD sources/startup.sh /opt/scripts/startup.sh
 
 # create the odoo user
 RUN adduser --home=/opt/odoo --disabled-password --gecos "" --shell=/bin/bash odoo
 
-# changing user is required by openerp which won't start with root
-# makes the container more unlikely to be unwillingly changed in interactive mode
+# Switch to user odoo to create the folders mapped with volumes, else the corresponding
+# folders will be created by root on the host
 USER odoo
 
-RUN /bin/bash -c "mkdir -p /opt/odoo/{bin,etc,sources/odoo,additional_addons,data}"
+# If the folders are created with "RUN mkdir" command, they will belong to root
+# instead of odoo! Hence the "RUN /bin/bash -c" trick.
+RUN /bin/bash -c "mkdir -p /opt/odoo/{bin,etc,sources/odoo,additional_addons,data,ssh}"
 RUN /bin/bash -c "mkdir -p /opt/odoo/var/{run,log,egg-cache}"
 
 # Add Odoo OCB sources and remove .git folder in order to reduce image size
@@ -69,14 +81,29 @@ WORKDIR /opt/odoo/sources
 RUN git clone https://github.com/OCA/OCB.git -b 7.0 odoo && \
   rm -rf odoo/.git
 
-# Execution environment
-USER 0
-ADD sources/odoo.conf /opt/sources/odoo.conf
-WORKDIR /app
-VOLUME ["/opt/odoo/var", "/opt/odoo/etc", "/opt/odoo/additional_addons", "/opt/odoo/data"]
+ADD sources/odoo.conf /opt/odoo/etc/odoo.conf
+ADD auto_addons /opt/odoo/auto_addons
+
+User 0
+
+# Provide read/write access to group (for host user mapping). For some reason, the
+# files added in a volume (e.g. odoo.conf) belong to root. This command imperatively
+# needs to run before creating the volumes.
+RUN chmod -R 775 /opt/odoo && chown -R odoo:odoo /opt/odoo
+
+VOLUME [ \
+  "/opt/odoo/var", \
+  "/opt/odoo/etc", \
+  "/opt/odoo/additional_addons", \
+  "/opt/odoo/data", \
+  "/opt/odoo/ssh", \
+  "/opt/scripts" \
+]
+
 # Set the default entrypoint (non overridable) to run when starting the container
+ADD bin /app/bin/
 ENTRYPOINT ["/app/bin/boot"]
 CMD ["help"]
-# Expose the odoo ports (for linked containers)
-EXPOSE 8069 8072
-ADD bin /app/bin/
+
+# Expose the odoo port (for linked containers)
+EXPOSE 8069

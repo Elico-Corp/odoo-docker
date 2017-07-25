@@ -29,7 +29,6 @@ RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main" > \
     libxrender1 libxext6 fontconfig \
     python-zsi \
     python-lasso \
-    libzmq3 \
     # libpq-dev is needed to install pg_config which is required by psycopg2
     libpq-dev \
     # These libraries are needed to install the pip modules
@@ -40,10 +39,6 @@ RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main" > \
     libldap2-dev \
     libsasl2-dev \
     libssl-dev \
-    # Librairies required for LESS
-    node-less \
-    nodejs \
-    npm \
     # This library is necessary to upgrade PIL/pillow module
     libjpeg8-dev \
     # Git is required to clone Odoo OCB project
@@ -52,10 +47,6 @@ RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main" > \
 # Install Odoo python dependencies
 ADD sources/pip-req.txt /opt/sources/pip-req.txt
 RUN pip install -r /opt/sources/pip-req.txt
-
-# Install LESS
-RUN npm install -g less less-plugin-clean-css && \
-  ln -s /usr/bin/nodejs /usr/bin/node
 
 # must unzip this package to make it visible as an odoo external dependency
 RUN easy_install -UZ py3o.template

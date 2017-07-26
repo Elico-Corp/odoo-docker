@@ -58,7 +58,8 @@ RUN npm install -g less less-plugin-clean-css && \
   ln -s /usr/bin/nodejs /usr/bin/node
 
 # must unzip this package to make it visible as an odoo external dependency
-RUN easy_install -UZ py3o.template
+RUN easy_install -UZ py3o.template==0.9.11
+RUN easy_install -UZ py3o.types==0.1.1
 
 # install wkhtmltopdf based on QT5
 # Warning: do not use latest version (0.12.2.1) because it causes the footer

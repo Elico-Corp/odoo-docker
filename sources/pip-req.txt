@@ -27,16 +27,9 @@ pycparser==2.10
 pydot==1.0.2
 pyjon.utils==0.7
 pyOpenSSL==0.14
-<<<<<<< HEAD
 pyparsing==2.1.10
 pyPdf==1.13
 pyserial==2.7
-=======
-pyparsing==1.5.7
-pyPdf==1.13
-pyserial==2.7
-Python-Chart==1.39
->>>>>>> b22e20adf46f0465868c5aef8fb1c2ea73ec9a27
 python_dateutil==1.5
 python_ldap==2.4.15
 python_openid==2.2.5
@@ -59,9 +52,5 @@ vobject==0.6.6
 Werkzeug==0.8.3
 wheel==0.24.0
 wsgiref==0.1.2
-<<<<<<< HEAD
-=======
-xlrd==0.9.4
->>>>>>> b22e20adf46f0465868c5aef8fb1c2ea73ec9a27
 xlwt==0.7.5
 zmq_rpc==0.1

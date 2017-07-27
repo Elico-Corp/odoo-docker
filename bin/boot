@@ -89,7 +89,7 @@ function start {
         echo $log_src[`date +%F.%H:%M:%S`]' ...with additional args: $*'
     fi
     sudo -i -u \#$TARGET_ID /usr/bin/python \
-                    /opt/odoo/sources/odoo/odoo-bin \
+                    /opt/odoo/sources/odoo/openerp-server \
                     -c $odoo_conf_file \
                     $*
 

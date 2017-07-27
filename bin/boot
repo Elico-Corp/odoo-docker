@@ -27,9 +27,9 @@ function login  {
 }
 
 function _update_odoo_conf_param {
-    if [ "$1" ]; then
-        echo $log_src[`date +%F.%H:%M:%S`]' Replacing parameter '$2
-        sudo -i -u \#$TARGET_ID sed -i "s/$2/$1/g" $odoo_conf_file
+    if [ "$2" ]; then
+        echo $log_src[`date +%F.%H:%M:%S`]' Replacing parameter '$1
+        sudo -i -u \#$TARGET_ID sed -i "s/$1/$2/g" $odoo_conf_file
     fi
 }
 
@@ -38,10 +38,10 @@ function start {
     bash /opt/scripts/startup.sh
 
     echo $log_src[`date +%F.%H:%M:%S`]' Updating Odoo conf...'
-    _update_odoo_conf_param $ADMIN_PASSWORD '_ADMIN_PASSWORD_'
-    _update_odoo_conf_param $DB_USER '_DB_USER_'
-    _update_odoo_conf_param $DB_PASSWORD '_DB_PASSWORD_'
-    _update_odoo_conf_param $DB_FILTER '_DB_FILTER_'
+    _update_odoo_conf_param '_ADMIN_PASSWORD_' $ADMIN_PASSWORD
+    _update_odoo_conf_param '_DB_USER_' $DB_USER
+    _update_odoo_conf_param '_DB_PASSWORD_' $DB_PASSWORD
+    _update_odoo_conf_param '_DB_FILTER_' $DB_FILTER
     echo $log_src[`date +%F.%H:%M:%S`]' Update Odoo conf done'
 
     echo $log_src[`date +%F.%H:%M:%S`]' Check if need to download addons repo...'

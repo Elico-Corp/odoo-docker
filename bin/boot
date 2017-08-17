@@ -33,18 +33,34 @@ function _update_odoo_conf_param {
     fi
 }
 
-function start {
-    echo $log_src[`date +%F.%H:%M:%S`]' Checking special requirements...'
-    bash /opt/scripts/startup.sh
-
-    echo $log_src[`date +%F.%H:%M:%S`]' Updating Odoo conf...'
+function _update_odoo_conf_params {
     _update_odoo_conf_param '_ADMIN_PASSWORD_' $ADMIN_PASSWORD
     _update_odoo_conf_param '_DB_USER_' $DB_USER
     _update_odoo_conf_param '_DB_PASSWORD_' $DB_PASSWORD
     _update_odoo_conf_param '_DB_FILTER_' $DB_FILTER
-    echo $log_src[`date +%F.%H:%M:%S`]' Update Odoo conf done'
+}
 
-    echo $log_src[`date +%F.%H:%M:%S`]' Check if need to download addons repo...'
+function _setup_ssh_key {
+    echo $log_src[`date +%F.%H:%M:%S`]' Setting up SSH key...'
+    ssh_folder=$( getent passwd $TARGET_ID | cut -d: -f6 )/.ssh
+    echo $log_src[`date +%F.%H:%M:%S`]' Creating SSH folder = '$ssh_folder
+    mkdir $ssh_folder
+    echo $log_src[`date +%F.%H:%M:%S`]' Copy SSH private key from /opt/odoo/ssh'
+    cp /opt/odoo/ssh/id_rsa $ssh_folder
+    echo $log_src[`date +%F.%H:%M:%S`]' Scanning GitHub key...'
+    ssh-keyscan github.com > $ssh_folder/known_hosts
+    echo $log_src[`date +%F.%H:%M:%S`]' Setup SSH config...'
+    echo "host github.com" > $ssh_folder/config
+    echo "    HostName github.com" >> $ssh_folder/config
+    echo "    User git" >> $ssh_folder/config
+    echo "    IdentityFile $ssh_folder/id_rsa" >> $ssh_folder/config
+    echo $log_src[`date +%F.%H:%M:%S`]' Securing SSH folder...'
+    chown -R $TARGET_ID:$TARGET_ID $ssh_folder
+    chmod 400 $ssh_folder/id_rsa
+    echo $log_src[`date +%F.%H:%M:%S`]' Setup SSH key done'
+}
+
+function _download_addons {
     if [ "$ADDONS_REPO" -o -a /opt/odoo/additional_addons/oca_dependencies.txt ]; then
         echo $log_src[`date +%F.%H:%M:%S`]' Git config for target user'
         sudo -i -u \#$TARGET_ID git config --global user.email "contact@elico-corp.com"
@@ -52,23 +68,7 @@ function start {
 
         echo $log_src[`date +%F.%H:%M:%S`]' Checking if need to setup SSH key...'
         if [ -a /opt/odoo/ssh/id_rsa ]; then
-            echo $log_src[`date +%F.%H:%M:%S`]' Setting up SSH key...'
-            SSH_FOLDER=$( getent passwd $TARGET_ID | cut -d: -f6 )/.ssh
-            echo $log_src[`date +%F.%H:%M:%S`]' Creating SSH folder = '$SSH_FOLDER
-            mkdir $SSH_FOLDER
-            echo $log_src[`date +%F.%H:%M:%S`]' Copy SSH private key from /opt/odoo/ssh'
-            cp /opt/odoo/ssh/id_rsa $SSH_FOLDER
-            echo $log_src[`date +%F.%H:%M:%S`]' Scanning GitHub key...'
-            ssh-keyscan github.com > $SSH_FOLDER/known_hosts
-            echo $log_src[`date +%F.%H:%M:%S`]' Setup SSH config...'
-            echo "host github.com" > $SSH_FOLDER/config
-            echo "    HostName github.com" >> $SSH_FOLDER/config
-            echo "    User git" >> $SSH_FOLDER/config
-            echo "    IdentityFile $SSH_FOLDER/id_rsa" >> $SSH_FOLDER/config
-            echo $log_src[`date +%F.%H:%M:%S`]' Securing SSH folder...'
-            chown -R $TARGET_ID:$TARGET_ID $SSH_FOLDER
-            chmod 400 $SSH_FOLDER/id_rsa
-            echo $log_src[`date +%F.%H:%M:%S`]' Setup SSH key done'
+            _setup_ssh_key
         fi
 
         if [[ -z "$FETCH_OCA_DEPENDENCIES" ]]; then
@@ -82,6 +82,17 @@ function start {
         echo $log_src[`date +%F.%H:%M:%S`]' No additional addons to download'
         sudo -i -u \#$TARGET_ID bash /opt/odoo/auto_addons/no_addons.sh $odoo_conf_file
     fi
+}
+
+function start {
+    echo $log_src[`date +%F.%H:%M:%S`]' Checking special requirements...'
+    bash /opt/scripts/startup.sh
+
+    echo $log_src[`date +%F.%H:%M:%S`]' Updating Odoo conf...'
+    _update_odoo_conf_params
+
+    echo $log_src[`date +%F.%H:%M:%S`]' Check if need to download addons repo...'
+    _download_addons
 
     echo $log_src[`date +%F.%H:%M:%S`]' Running odoo...'
     set +e

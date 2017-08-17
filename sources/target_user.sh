@@ -10,11 +10,8 @@ log_src='['${0##*/}']'
 
 # Check if there's a target user to run Odoo
 if [ "$TARGET_ID" ]; then
-    echo $log_src[`date +%F.%H:%M:%S`]' TARGET_ID = '$TARGET_ID
-
     echo $log_src[`date +%F.%H:%M:%S`]' Check if target user exists...'
     EXISTS=$( getent passwd $TARGET_ID | wc -l )
-    echo $log_src[`date +%F.%H:%M:%S`]' EXISTS = '$EXISTS
 
     # Create target user
     if [ $EXISTS == "0" ]; then

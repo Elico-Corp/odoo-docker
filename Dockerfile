@@ -1,6 +1,9 @@
 FROM ubuntu:14.04
 MAINTAINER Elico Corp <contact@elico-corp.com>
 
+# Set timezone to UTC
+RUN ln -sf /usr/share/zoneinfo/Etc/UTC /etc/localtime
+
 # generate locales
 RUN locale-gen en_US.UTF-8 && update-locale
 RUN echo 'LANG="en_US.UTF-8"' > /etc/default/locale

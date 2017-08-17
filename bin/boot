@@ -86,7 +86,7 @@ function start {
     echo $log_src[`date +%F.%H:%M:%S`]' Running odoo...'
     set +e
     if [ ! -e $1 ]; then
-        echo $log_src[`date +%F.%H:%M:%S`]' ...with additional args: $*'
+        echo $log_src[`date +%F.%H:%M:%S`]' ...with additional args: ' $*
     fi
     sudo -i -u \#$TARGET_ID /usr/bin/python \
                     /opt/odoo/sources/odoo/openerp-server \

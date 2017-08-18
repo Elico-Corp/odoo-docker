@@ -26,22 +26,22 @@ function login  {
     set -e
 }
 
-function _update_odoo_conf_param {
-    # If no value is provided, use default value
-    val=$3
-    if [ "$2" ]; then
-        val=$2
-    fi
-
-    sudo -i -u $odoo_user sed -i "s/$1/$val/g" $odoo_conf_file
-}
-
 function _update_odoo_conf_params {
-    echo $log_src[`date +%F.%H:%M:%S`]' Updating Odoo conf...'
-    _update_odoo_conf_param '_ADMIN_PASSWORD_' "$ADMIN_PASSWORD" 'admin'
-    _update_odoo_conf_param '_DB_USER_' "$DB_USER"
-    _update_odoo_conf_param '_DB_PASSWORD_' "$DB_PASSWORD"
-    _update_odoo_conf_param '_DB_FILTER_' "$DB_FILTER"
+    # Loop over all the "ODOO_" ENV variables
+    while read -r var; do
+        # Remove "ODOO_" from ENV variable and convert to lowercase
+        param=${var:5}
+        param=${param,,}
+
+        # Get the value of the corresponding ENV variable and escape slashes
+        val=${!var}
+        val=$( echo $val | sed 's/\//\\\//g')
+
+        bash /app/bin/update_odoo_param.sh $odoo_user $odoo_conf_file $param $val
+
+        # Unset the environment variable for security purpose
+        unset $var
+    done <<< "$( printenv | grep '^ODOO_' | sed 's/=.*//g' )"
 }
 
 function _setup_ssh_key {
@@ -65,13 +65,12 @@ function _setup_ssh_key {
 }
 
 function _download_addons {
-    echo $log_src[`date +%F.%H:%M:%S`]' Check if need to download addons repo...'
     if [ "$ADDONS_REPO" -o -a /opt/odoo/additional_addons/oca_dependencies.txt ]; then
-        echo $log_src[`date +%F.%H:%M:%S`]' Git config for target user'
+        # Git config for target user
         sudo -i -u $odoo_user git config --global user.email "contact@elico-corp.com"
         sudo -i -u $odoo_user git config --global user.name "Elico Corp - Odoo Docker"
 
-        echo $log_src[`date +%F.%H:%M:%S`]' Checking if need to setup SSH key...'
+        # Setup SSH key
         if [ -a /opt/odoo/ssh/id_rsa ]; then
             _setup_ssh_key
         fi
@@ -84,7 +83,7 @@ function _download_addons {
         echo $log_src[`date +%F.%H:%M:%S`]' Downloading additional addons...'
         sudo -i -u $odoo_user python /opt/odoo/auto_addons/addons.py $FETCH_OCA_DEPENDENCIES $ADDONS_REPO
     else
-        echo $log_src[`date +%F.%H:%M:%S`]' No additional addons to download'
+        # No additional addons to download
         sudo -i -u $odoo_user bash /opt/odoo/auto_addons/no_addons.sh $odoo_conf_file
     fi
 }
@@ -93,7 +92,10 @@ function start {
     echo $log_src[`date +%F.%H:%M:%S`]' Checking special requirements...'
     bash /opt/scripts/startup.sh
 
+    echo $log_src[`date +%F.%H:%M:%S`]' Updating Odoo conf...'
     _update_odoo_conf_params
+
+    echo $log_src[`date +%F.%H:%M:%S`]' Check if need to download addons repo...'
     _download_addons
 
     echo $log_src[`date +%F.%H:%M:%S`]' Running odoo...'

@@ -29,7 +29,7 @@ function login  {
 function _update_odoo_conf_param {
     if [ "$2" ]; then
         echo $log_src[`date +%F.%H:%M:%S`]' Replacing parameter '$1
-        sudo -i -u \#$TARGET_ID sed -i "s/$1/$2/g" $odoo_conf_file
+        sudo -i -u $odoo_user sed -i "s/$1/$2/g" $odoo_conf_file
     fi
 }
 
@@ -42,7 +42,7 @@ function _update_odoo_conf_params {
 
 function _setup_ssh_key {
     echo $log_src[`date +%F.%H:%M:%S`]' Setting up SSH key...'
-    ssh_folder=$( getent passwd $TARGET_ID | cut -d: -f6 )/.ssh
+    ssh_folder=$( getent passwd $odoo_user | cut -d: -f6 )/.ssh
     echo $log_src[`date +%F.%H:%M:%S`]' Creating SSH folder = '$ssh_folder
     mkdir $ssh_folder
     echo $log_src[`date +%F.%H:%M:%S`]' Copy SSH private key from /opt/odoo/ssh'
@@ -55,7 +55,7 @@ function _setup_ssh_key {
     echo "    User git" >> $ssh_folder/config
     echo "    IdentityFile $ssh_folder/id_rsa" >> $ssh_folder/config
     echo $log_src[`date +%F.%H:%M:%S`]' Securing SSH folder...'
-    chown -R $TARGET_ID:$TARGET_ID $ssh_folder
+    chown -R $odoo_user:$odoo_user $ssh_folder
     chmod 400 $ssh_folder/id_rsa
     echo $log_src[`date +%F.%H:%M:%S`]' Setup SSH key done'
 }
@@ -63,8 +63,8 @@ function _setup_ssh_key {
 function _download_addons {
     if [ "$ADDONS_REPO" -o -a /opt/odoo/additional_addons/oca_dependencies.txt ]; then
         echo $log_src[`date +%F.%H:%M:%S`]' Git config for target user'
-        sudo -i -u \#$TARGET_ID git config --global user.email "contact@elico-corp.com"
-        sudo -i -u \#$TARGET_ID git config --global user.name "Elico Corp - Odoo Docker"
+        sudo -i -u $odoo_user git config --global user.email "contact@elico-corp.com"
+        sudo -i -u $odoo_user git config --global user.name "Elico Corp - Odoo Docker"
 
         echo $log_src[`date +%F.%H:%M:%S`]' Checking if need to setup SSH key...'
         if [ -a /opt/odoo/ssh/id_rsa ]; then
@@ -77,10 +77,10 @@ function _download_addons {
         fi
 
         echo $log_src[`date +%F.%H:%M:%S`]' Downloading additional addons...'
-        sudo -i -u \#$TARGET_ID python /opt/odoo/auto_addons/addons.py $FETCH_OCA_DEPENDENCIES $ADDONS_REPO
+        sudo -i -u $odoo_user python /opt/odoo/auto_addons/addons.py $FETCH_OCA_DEPENDENCIES $ADDONS_REPO
     else
         echo $log_src[`date +%F.%H:%M:%S`]' No additional addons to download'
-        sudo -i -u \#$TARGET_ID bash /opt/odoo/auto_addons/no_addons.sh $odoo_conf_file
+        sudo -i -u $odoo_user bash /opt/odoo/auto_addons/no_addons.sh $odoo_conf_file
     fi
 }
 
@@ -99,7 +99,7 @@ function start {
     if [ ! -e $1 ]; then
         echo $log_src[`date +%F.%H:%M:%S`]' ...with additional args: ' $*
     fi
-    sudo -i -u \#$TARGET_ID /usr/bin/python \
+    sudo -i -u $odoo_user /usr/bin/python \
                     /opt/odoo/sources/odoo/openerp-server \
                     -c $odoo_conf_file \
                     $*
@@ -116,13 +116,9 @@ function on_exit() {
 }
 trap on_exit INT TERM
 
-echo $log_src[`date +%F.%H:%M:%S`]' Search for target user...'
-bash /opt/sources/target_user.sh
-
-if [[ -z "$TARGET_ID" ]]; then
-    echo $log_src[`date +%F.%H:%M:%S`]' No target user, falling back to odoo'
-    TARGET_ID=$( id -u odoo )
-fi
+echo $log_src[`date +%F.%H:%M:%S`]' Search for target Odoo user...'
+bash /app/bin/target_user.sh
+odoo_user=$( cat /tmp/odoo_user )
 
 echo $log_src[`date +%F.%H:%M:%S`]' Search conf file...'
 if [[ -z "$odoo_conf_file" ]]; then

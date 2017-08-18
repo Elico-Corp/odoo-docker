@@ -62,9 +62,6 @@ ADD https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.1/wkhtmlto
   /opt/sources/wkhtmltox.deb
 RUN dpkg -i /opt/sources/wkhtmltox.deb
 
-# Script to map the Odoo user with the host user (see FIXME inside)
-ADD sources/target_user.sh /opt/sources/target_user.sh
-
 # Startup script for custom setup
 ADD sources/startup.sh /opt/scripts/startup.sh
 
@@ -106,8 +103,8 @@ VOLUME [ \
 
 # Set the default entrypoint (non overridable) to run when starting the container
 ADD bin /app/bin/
-ENTRYPOINT ["/app/bin/boot"]
-CMD ["help"]
+ENTRYPOINT [ "/app/bin/boot" ]
+CMD [ "help" ]
 
 # Expose the odoo port (for linked containers)
 EXPOSE 8069

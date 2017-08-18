@@ -27,17 +27,21 @@ function login  {
 }
 
 function _update_odoo_conf_param {
+    # If no value is provided, use default value
+    val=$3
     if [ "$2" ]; then
-        echo $log_src[`date +%F.%H:%M:%S`]' Replacing parameter '$1
-        sudo -i -u $odoo_user sed -i "s/$1/$2/g" $odoo_conf_file
+        val=$2
     fi
+
+    sudo -i -u $odoo_user sed -i "s/$1/$val/g" $odoo_conf_file
 }
 
 function _update_odoo_conf_params {
-    _update_odoo_conf_param '_ADMIN_PASSWORD_' $ADMIN_PASSWORD
-    _update_odoo_conf_param '_DB_USER_' $DB_USER
-    _update_odoo_conf_param '_DB_PASSWORD_' $DB_PASSWORD
-    _update_odoo_conf_param '_DB_FILTER_' $DB_FILTER
+    echo $log_src[`date +%F.%H:%M:%S`]' Updating Odoo conf...'
+    _update_odoo_conf_param '_ADMIN_PASSWORD_' "$ADMIN_PASSWORD" 'admin'
+    _update_odoo_conf_param '_DB_USER_' "$DB_USER"
+    _update_odoo_conf_param '_DB_PASSWORD_' "$DB_PASSWORD"
+    _update_odoo_conf_param '_DB_FILTER_' "$DB_FILTER"
 }
 
 function _setup_ssh_key {
@@ -61,6 +65,7 @@ function _setup_ssh_key {
 }
 
 function _download_addons {
+    echo $log_src[`date +%F.%H:%M:%S`]' Check if need to download addons repo...'
     if [ "$ADDONS_REPO" -o -a /opt/odoo/additional_addons/oca_dependencies.txt ]; then
         echo $log_src[`date +%F.%H:%M:%S`]' Git config for target user'
         sudo -i -u $odoo_user git config --global user.email "contact@elico-corp.com"
@@ -88,10 +93,7 @@ function start {
     echo $log_src[`date +%F.%H:%M:%S`]' Checking special requirements...'
     bash /opt/scripts/startup.sh
 
-    echo $log_src[`date +%F.%H:%M:%S`]' Updating Odoo conf...'
     _update_odoo_conf_params
-
-    echo $log_src[`date +%F.%H:%M:%S`]' Check if need to download addons repo...'
     _download_addons
 
     echo $log_src[`date +%F.%H:%M:%S`]' Running odoo...'

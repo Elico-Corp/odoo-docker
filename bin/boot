@@ -27,20 +27,21 @@ function login  {
 }
 
 function _update_odoo_conf_params {
-    # Loop over all the "ODOO_" ENV variables
-    while read -r var; do
+    # Loop over all the "ODOO_" ENV variables (see `<<<` after `done`)
+    while read -r env_var; do
         # Remove "ODOO_" from ENV variable and convert to lowercase
-        param=${var:5}
-        param=${param,,}
+        odoo_param=${env_var:5}
+        odoo_param=${odoo_param,,}
 
         # Get the value of the corresponding ENV variable and escape slashes
-        val=${!var}
+        val=${!env_var}
         val=$( echo $val | sed 's/\//\\\//g')
 
-        bash /app/bin/update_odoo_param.sh $odoo_user $odoo_conf_file $param $val
+        # FIXME Should not be an external script (see reason in script header)
+        bash /app/bin/update_odoo_param.sh $odoo_user $odoo_conf_file $odoo_param $val
 
         # Unset the environment variable for security purpose
-        unset $var
+        unset $env_var
     done <<< "$( printenv | grep '^ODOO_' | sed 's/=.*//g' )"
 }
 
@@ -121,6 +122,7 @@ function on_exit() {
 trap on_exit INT TERM
 
 echo $log_src[`date +%F.%H:%M:%S`]' Search for target Odoo user...'
+# FIXME Should not be an external script (see reason in script header)
 bash /app/bin/target_user.sh
 odoo_user=$( cat /tmp/odoo_user )
 

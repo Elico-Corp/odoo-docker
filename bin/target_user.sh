@@ -30,7 +30,8 @@ if [ "$TARGET_ID" ]; then
 
         # If the user already exists, check if it's the same as odoo
         if [ $TARGET_ID -ne $odoo_user_id ]; then
-            echo $log_src[`date +%F.%H:%M:%S`]' The target user is not the same as odoo, exiting'
+            echo $log_src[`date +%F.%H:%M:%S`]' ERROR: The ID of the target user already' \
+                'exists but it is not the same as the ID of `odoo` user'
             exit 1
         fi
     fi

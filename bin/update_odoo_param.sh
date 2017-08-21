@@ -15,7 +15,8 @@ odoo_param=$3
 val=$4
 
 # Check if the conf already contains that parameter
-found=$( grep -q "^$odoo_param\s*=" $odoo_conf_file )
+grep -q "^$odoo_param\s*=" $odoo_conf_file
+found=$?
 
 if [ $found -eq 0 ]; then
     # Substitute the value

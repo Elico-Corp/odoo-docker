@@ -47,25 +47,35 @@ function _update_odoo_conf_params {
 
 function _setup_ssh_key {
     echo $log_src[`date +%F.%H:%M:%S`]' Setting up SSH key...'
+
+    # Create SSH config folder in $HOME folder of Odoo target user
     ssh_folder=$( getent passwd $odoo_user | cut -d: -f6 )/.ssh
-    echo $log_src[`date +%F.%H:%M:%S`]' Creating SSH folder = '$ssh_folder
     mkdir $ssh_folder
-    echo $log_src[`date +%F.%H:%M:%S`]' Copy SSH private key from /opt/odoo/ssh'
+
+    # Copy SSH private key from /opt/odoo/ssh
     cp /opt/odoo/ssh/id_rsa $ssh_folder
+
     echo $log_src[`date +%F.%H:%M:%S`]' Scanning GitHub key...'
     ssh-keyscan github.com > $ssh_folder/known_hosts
-    echo $log_src[`date +%F.%H:%M:%S`]' Setup SSH config...'
+
+    # Setup SSH config
     echo "host github.com" > $ssh_folder/config
     echo "    HostName github.com" >> $ssh_folder/config
     echo "    User git" >> $ssh_folder/config
     echo "    IdentityFile $ssh_folder/id_rsa" >> $ssh_folder/config
+
+    # Secure SSH folder
     echo $log_src[`date +%F.%H:%M:%S`]' Securing SSH folder...'
     chown -R $odoo_user:$odoo_user $ssh_folder
     chmod 400 $ssh_folder/id_rsa
+
     echo $log_src[`date +%F.%H:%M:%S`]' Setup SSH key done'
 }
 
 function _download_addons {
+    # 2 reasons to download extra addons:
+    #  1) ENV variable ADDONS_REPO is defined
+    #  2) There's a file called `oca_dependencies.txt` at the root of extra addons folder
     if [ "$ADDONS_REPO" -o -a /opt/odoo/additional_addons/oca_dependencies.txt ]; then
         # Git config for target user
         sudo -i -u $odoo_user git config --global user.email "contact@elico-corp.com"

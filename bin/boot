@@ -77,7 +77,7 @@ function _download_addons {
     #  2) There's a file called `oca_dependencies.txt` at the root of extra addons folder
     if [ "$ADDONS_REPO" -o -a /opt/odoo/additional_addons/oca_dependencies.txt ]; then
         # Git config for target user
-        sudo -i -u $odoo_user git config --global user.email "contact@elico-corp.com"
+        sudo -i -u $odoo_user git config --global user.email "webmaster@elico-corp.com"
         sudo -i -u $odoo_user git config --global user.name "Elico Corp - Odoo Docker"
 
         # Setup SSH key

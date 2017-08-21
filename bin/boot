@@ -85,8 +85,8 @@ function _download_addons {
             _setup_ssh_key
         fi
 
+        # Always fetch dependencies unless specified
         if [[ -z "$FETCH_OCA_DEPENDENCIES" ]]; then
-            echo $log_src[`date +%F.%H:%M:%S`]' Fetch dependencies undefined, set to True'
             FETCH_OCA_DEPENDENCIES=True
         fi
 
@@ -105,7 +105,7 @@ function start {
     echo $log_src[`date +%F.%H:%M:%S`]' Updating Odoo conf...'
     _update_odoo_conf_params
 
-    echo $log_src[`date +%F.%H:%M:%S`]' Check if need to download addons repo...'
+    # Check if need to download addons repo
     _download_addons
 
     echo $log_src[`date +%F.%H:%M:%S`]' Running odoo...'
@@ -130,12 +130,12 @@ function on_exit() {
 }
 trap on_exit INT TERM
 
-echo $log_src[`date +%F.%H:%M:%S`]' Search for target Odoo user...'
+echo $log_src[`date +%F.%H:%M:%S`]' Searching for target Odoo user...'
 # FIXME Should not be an external script (see reason in script header)
 bash /app/bin/target_user.sh
 odoo_user=$( cat /tmp/odoo_user )
 
-echo $log_src[`date +%F.%H:%M:%S`]' Search conf file...'
+echo $log_src[`date +%F.%H:%M:%S`]' Searching for conf file...'
 if [[ -z "$odoo_conf_file" ]]; then
     odoo_conf_file="/opt/odoo/etc/odoo.conf"
 fi

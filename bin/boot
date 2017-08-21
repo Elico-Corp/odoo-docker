@@ -134,6 +134,7 @@ echo $log_src[`date +%F.%H:%M:%S`]' Searching for target Odoo user...'
 # FIXME Should not be an external script (see reason in script header)
 bash /app/bin/target_user.sh
 odoo_user=$( cat /tmp/odoo_user )
+rm -f /tmp/odoo_user
 
 echo $log_src[`date +%F.%H:%M:%S`]' Searching for conf file...'
 if [[ -z "$odoo_conf_file" ]]; then

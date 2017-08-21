@@ -11,16 +11,16 @@ log_src='['${0##*/}']'
 
 odoo_user=$1
 odoo_conf_file=$2
-param=$3
+odoo_param=$3
 val=$4
 
 # Check if the conf already contains that parameter
-grep -q "^$param\s*=" $odoo_conf_file
+found=$( grep -q "^$odoo_param\s*=" $odoo_conf_file )
 
-if [ $? -eq 0 ]; then
+if [ $found -eq 0 ]; then
     # Substitute the value
-    sudo -i -u $odoo_user sed -i "s/^$param\s*=.*/$param = $val/g" $odoo_conf_file
+    sudo -i -u $odoo_user sed -i "s/^$odoo_param\s*=.*/$odoo_param = $val/g" $odoo_conf_file
 else
     # Append the parameter (hide tee output to stdout)
-    echo "$param = $val" | sudo -i -u $odoo_user tee -a $odoo_conf_file > /dev/null
+    echo "$odoo_param = $val" | sudo -i -u $odoo_user tee -a $odoo_conf_file > /dev/null
 fi

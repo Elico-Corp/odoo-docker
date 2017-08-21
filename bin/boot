@@ -65,7 +65,6 @@ function _setup_ssh_key {
     echo "    IdentityFile $ssh_folder/id_rsa" >> $ssh_folder/config
 
     # Secure SSH folder
-    echo $log_src[`date +%F.%H:%M:%S`]' Securing SSH folder...'
     chown -R $odoo_user:$odoo_user $ssh_folder
     chmod 400 $ssh_folder/id_rsa
 

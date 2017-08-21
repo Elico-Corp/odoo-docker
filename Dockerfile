@@ -1,6 +1,9 @@
 FROM ubuntu:14.04
 MAINTAINER Elico Corp <contact@elico-corp.com>
 
+# Set timezone to UTC
+RUN ln -sf /usr/share/zoneinfo/Etc/UTC /etc/localtime
+
 # generate locales
 RUN locale-gen en_US.UTF-8 && update-locale
 RUN echo 'LANG="en_US.UTF-8"' > /etc/default/locale
@@ -68,9 +71,6 @@ ADD https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.1/wkhtmlto
   /opt/sources/wkhtmltox.deb
 RUN dpkg -i /opt/sources/wkhtmltox.deb
 
-# Script to map the Odoo user with the host user (see FIXME inside)
-ADD sources/target_user.sh /opt/sources/target_user.sh
-
 # Startup script for custom setup
 ADD sources/startup.sh /opt/scripts/startup.sh
 
@@ -88,7 +88,7 @@ RUN /bin/bash -c "mkdir -p /opt/odoo/var/{run,log,egg-cache}"
 
 # Add Odoo OCB sources and remove .git folder in order to reduce image size
 WORKDIR /opt/odoo/sources
-RUN git clone https://github.com/OCA/OCB.git -b 10.0 odoo && \
+RUN git clone https://github.com/OCA/OCB.git -b 9.0 odoo && \
   rm -rf odoo/.git
 
 ADD sources/odoo.conf /opt/odoo/etc/odoo.conf
@@ -112,8 +112,8 @@ VOLUME [ \
 
 # Set the default entrypoint (non overridable) to run when starting the container
 ADD bin /app/bin/
-ENTRYPOINT ["/app/bin/boot"]
-CMD ["help"]
+ENTRYPOINT [ "/app/bin/boot" ]
+CMD [ "help" ]
 
 # Expose the odoo ports (for linked containers)
 EXPOSE 8069 8072

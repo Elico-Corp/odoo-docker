@@ -1,6 +1,9 @@
 FROM ubuntu:14.04
 MAINTAINER Elico Corp <contact@elico-corp.com>
 
+# Set timezone to UTC
+RUN ln -sf /usr/share/zoneinfo/Etc/UTC /etc/localtime
+
 # generate locales
 RUN locale-gen en_US.UTF-8 && update-locale
 RUN echo 'LANG="en_US.UTF-8"' > /etc/default/locale
@@ -67,9 +70,6 @@ RUN easy_install -UZ py3o.types==0.1.1
 ADD https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.1/wkhtmltox-0.12.1_linux-trusty-amd64.deb \
   /opt/sources/wkhtmltox.deb
 RUN dpkg -i /opt/sources/wkhtmltox.deb
-
-# Script to map the Odoo user with the host user (see FIXME inside)
-ADD sources/target_user.sh /opt/sources/target_user.sh
 
 # Startup script for custom setup
 ADD sources/startup.sh /opt/scripts/startup.sh

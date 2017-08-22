@@ -10,19 +10,7 @@ log_src='['${0##*/}']'
 
 function help {
     set +e
-    cat bin/help.txt
-    set -e
-}
-
-function login  {
-    echo $log_src[`date +%F.%H:%M:%S`]' Running bash'
-    set +e
-    if [[ ! -e $1 && $1 = "root" ]]; then
-        /bin/bash
-    else
-        sudo su - odoo
-    fi
-    SERVICE_PID=$!
+    cat /usr/share/man/help.txt
     set -e
 }
 

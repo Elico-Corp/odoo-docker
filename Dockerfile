@@ -101,6 +101,9 @@ VOLUME [ \
   "/opt/scripts" \
 ]
 
+# Use README for the help command
+ADD README.md /usr/share/man/help.txt
+
 # Set the default entrypoint (non overridable) to run when starting the container
 ADD bin /app/bin/
 ENTRYPOINT [ "/app/bin/boot" ]

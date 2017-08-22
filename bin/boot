@@ -89,6 +89,13 @@ function start {
     odoo_user=$( cat /tmp/odoo_user )
     rm -f /tmp/odoo_user
 
+    # If the folders mapped to the volumes didn't exist, Docker has created
+    # them with root instead of the target Odoo user. Making sure to give back
+    # the ownership to the corresponding host user.
+    chown $odoo_user:$odoo_user /opt/odoo/{etc,additional_addons,data,ssh,var} \
+                                /opt/odoo/data/{addons,filestore,sessions} \
+                                /opt/odoo/var/{run,log,egg-cache}
+
     echo $log_src[`date +%F.%H:%M:%S`]' Searching for conf file...'
     if [[ -z "$odoo_conf_file" ]]; then
         odoo_conf_file="/opt/odoo/etc/odoo.conf"
@@ -109,9 +116,9 @@ function start {
         echo $log_src[`date +%F.%H:%M:%S`]' ...with additional args: ' $*
     fi
     sudo -i -u $odoo_user /usr/bin/python \
-                    /opt/odoo/sources/odoo/openerp-server \
-                    -c $odoo_conf_file \
-                    $*
+                          /opt/odoo/sources/odoo/openerp-server \
+                          -c $odoo_conf_file \
+                          $*
 
     SERVICE_PID=$!
     set -e

@@ -96,9 +96,9 @@ ADD auto_addons /opt/odoo/auto_addons
 
 User 0
 
-# Provide read/write access to group (for host user mapping). For some reason, the
-# files added in a volume (e.g. odoo.conf) belong to root. This command imperatively
-# needs to run before creating the volumes.
+# Provide read/write access to odoo group (for host user mapping). This command
+# must run before creating the volumes since they become readonly until the
+# container is started.
 RUN chmod -R 775 /opt/odoo && chown -R odoo:odoo /opt/odoo
 
 VOLUME [ \
@@ -109,6 +109,9 @@ VOLUME [ \
   "/opt/odoo/ssh", \
   "/opt/scripts" \
 ]
+
+# Use README for the help command
+ADD README.md /usr/share/man/help.txt
 
 # Set the default entrypoint (non overridable) to run when starting the container
 ADD bin /app/bin/

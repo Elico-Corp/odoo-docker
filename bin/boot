@@ -10,19 +10,7 @@ log_src='['${0##*/}']'
 
 function help {
     set +e
-    cat bin/help.txt
-    set -e
-}
-
-function login  {
-    echo $log_src[`date +%F.%H:%M:%S`]' Running bash'
-    set +e
-    if [[ ! -e $1 && $1 = "root" ]]; then
-        /bin/bash
-    else
-        sudo su - odoo
-    fi
-    SERVICE_PID=$!
+    cat /usr/share/man/help.txt
     set -e
 }
 
@@ -95,6 +83,24 @@ function _download_addons {
 }
 
 function start {
+    echo $log_src[`date +%F.%H:%M:%S`]' Searching for target Odoo user...'
+    # FIXME Should not be an external script (see reason in script header)
+    bash /app/bin/target_user.sh
+    odoo_user=$( cat /tmp/odoo_user )
+    rm -f /tmp/odoo_user
+
+    # If the folders mapped to the volumes didn't exist, Docker has created
+    # them with root instead of the target Odoo user. Making sure to give back
+    # the ownership to the corresponding host user.
+    chown $odoo_user:$odoo_user /opt/odoo/{etc,additional_addons,data,ssh,var} \
+                                /opt/odoo/data/{addons,filestore,sessions} \
+                                /opt/odoo/var/{run,log,egg-cache}
+
+    echo $log_src[`date +%F.%H:%M:%S`]' Searching for conf file...'
+    if [[ -z "$odoo_conf_file" ]]; then
+        odoo_conf_file="/opt/odoo/etc/odoo.conf"
+    fi
+
     echo $log_src[`date +%F.%H:%M:%S`]' Checking special requirements...'
     bash /opt/scripts/startup.sh
 
@@ -110,9 +116,9 @@ function start {
         echo $log_src[`date +%F.%H:%M:%S`]' ...with additional args: ' $*
     fi
     sudo -i -u $odoo_user /usr/bin/python \
-                    /opt/odoo/sources/odoo/openerp-server \
-                    -c $odoo_conf_file \
-                    $*
+                          /opt/odoo/sources/odoo/openerp-server \
+                          -c $odoo_conf_file \
+                          $*
 
     SERVICE_PID=$!
     set -e
@@ -125,17 +131,6 @@ function on_exit() {
     exit 0
 }
 trap on_exit INT TERM
-
-echo $log_src[`date +%F.%H:%M:%S`]' Searching for target Odoo user...'
-# FIXME Should not be an external script (see reason in script header)
-bash /app/bin/target_user.sh
-odoo_user=$( cat /tmp/odoo_user )
-rm -f /tmp/odoo_user
-
-echo $log_src[`date +%F.%H:%M:%S`]' Searching for conf file...'
-if [[ -z "$odoo_conf_file" ]]; then
-    odoo_conf_file="/opt/odoo/etc/odoo.conf"
-fi
 
 echo $log_src[`date +%F.%H:%M:%S`]' Running command...'
 for arg in "$*"

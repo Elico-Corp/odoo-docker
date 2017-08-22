@@ -46,8 +46,6 @@ function _update_odoo_conf_params {
 }
 
 function _setup_ssh_key {
-    echo $log_src[`date +%F.%H:%M:%S`]' Setting up SSH key...'
-
     # Create SSH config folder in $HOME folder of Odoo target user
     ssh_folder=$( getent passwd $odoo_user | cut -d: -f6 )/.ssh
     mkdir $ssh_folder
@@ -67,8 +65,6 @@ function _setup_ssh_key {
     # Secure SSH folder
     chown -R $odoo_user:$odoo_user $ssh_folder
     chmod 400 $ssh_folder/id_rsa
-
-    echo $log_src[`date +%F.%H:%M:%S`]' Setup SSH key done'
 }
 
 function _download_addons {

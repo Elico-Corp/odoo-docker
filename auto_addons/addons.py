@@ -194,13 +194,11 @@ class Repo(object):
             return
         if os.path.exists(self.path):
             if fetch_dep:
-                print('PULL: %s %s' % (self.path, self.branch))
                 cmd = self.update_cmd
                 call(cmd)
             else:
                 self.fetch_branch_name()
         else:
-            print('CLONE: %s %s' % (self.path, self.branch))
             result = call(self.download_cmd)
             if result != 0:
                 if parent and parent.parent:
@@ -271,7 +269,6 @@ def main():
 
     if remote_url:
         # Only one master repo to download
-        print('remote_url: %s ' % remote_url)
         Repo(remote_url).download(fetch_dep=fetch_dep)
     else:
         # List of repos is defined in oca_dependencies.txt at the root of
@@ -281,7 +278,6 @@ def main():
                 l = line.strip('\n').strip()
                 if l.startswith('#') or not l:
                     continue
-                print('remote_url: %s ' % l)
                 Repo(l).download(fetch_dep=fetch_dep)
 
     write_addons_path()

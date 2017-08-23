@@ -185,7 +185,7 @@ See Host user mapping section for more info.
 
 ## Host user mapping
 
-## Default host user mapping in Docker
+### Default host user mapping in Docker
 Each Docker image defines its own [users][dk-user].
 
   [dk-user]: https://docs.docker.com/engine/userguide/eng-image/dockerfile_best-practices/#user

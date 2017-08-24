@@ -11,17 +11,18 @@ log_src='['${0##*/}']'
 odoo_user='odoo'
 
 # Check if there's a target user to run Odoo
-if [ "$TARGET_ID" ]; then
+if [ "$TARGET_UID" ]; then
     # Check whether target user exists or not
-    exists=$( getent passwd $TARGET_ID | wc -l )
+    exists=$( getent passwd $TARGET_UID | wc -l )
 
     # Create target user
     if [ $exists == "0" ]; then
         echo $log_src[`date +%F.%H:%M:%S`]' Creating target Odoo user...'
         odoo_user='target-odoo-user'
-        adduser --uid $TARGET_ID --disabled-password --gecos "" --shell=/bin/bash $odoo_user
+        useradd --uid $TARGET_UID --no-log-init -r $odoo_user
 
-        # Add target user to odoo group so that he can read/write the content of /opt/odoo
+        # Add target user to odoo group so that he can read/write the content
+        # of /opt/odoo
         echo $log_src[`date +%F.%H:%M:%S`]' Adding user to `odoo` group...'
         usermod -a -G odoo $odoo_user
     else
@@ -29,9 +30,10 @@ if [ "$TARGET_ID" ]; then
         odoo_user_id=$( id -u $odoo_user )
 
         # If the user already exists, check if it's the same as odoo
-        if [ $TARGET_ID -ne $odoo_user_id ]; then
-            echo $log_src[`date +%F.%H:%M:%S`]' ERROR: The ID of the target user already' \
-                'exists but it is not the same as the ID of `odoo` user'
+        if [ $TARGET_UID -ne $odoo_user_id ]; then
+            echo $log_src[`date +%F.%H:%M:%S`]' ERROR: The UID of the target' \
+                'user already exists but it is not the same as the ID of' \
+                '`odoo` user'
             exit 1
         fi
     fi

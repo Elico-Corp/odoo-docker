@@ -30,8 +30,9 @@ This image is a fork of [XCG Consulting][xcg] Odoo Docker image available
     - [Automatically fetch Git repositories](#git_fetch)
     - [Fetch multiple independent repositories](#fetch_multiple_repos)
     - [Fetch private GitHub repositories](#git_ssh)
-    - [Advanced `oca_dependencies.txt` syntax](#oca_dependencies)
+- [Run a bash script at startup](#startup_script)
 - [How to extend this image](#extend_image)
+- [Roadmap](#roadmap)
 
   [toc]: #toc "Table of Contents"
 
@@ -386,7 +387,7 @@ It is also possible to use a custom Odoo configuration file. The most common
 ways are:
 
 1. `ADD` the configuration file in `/opt/odoo/etc/odoo.conf` using a
-[Dockerfile][dkf]
+[`Dockerfile`][dkf]
 2. Map the `/opt/odoo/etc/odoo.conf` using a volume
 
   [dkf]: https://docs.docker.com/engine/reference/builder/
@@ -473,6 +474,17 @@ as well as all the Git repositories it depends on, you can use the following
           - ODOO_DB_PASSWORD=strong_pg_odoo_password
         network_mode: bridge
 
+**Note:** After the repositories have been fetched, it might not be required to
+pull them every time the container is restarted. In that case, simply set the
+environment variable `FETCH_OCA_DEPENDENCIES` to `False` in order to boot much
+faster, e.g.:
+
+    environment:
+      - FETCH_OCA_DEPENDENCIES=False
+
+In order to update the code of the Git repositories, set this variable to
+`True` or just remove it.
+
 <a name="fetch_multiple_repos"></a>
 ### Fetch multiple independent repositories [^][toc]
 It might be necessary to fetch more than one Git repository (and the
@@ -546,10 +558,65 @@ home folder, he can map his `.ssh` folder instead, e.g.:
     volumes:
       - ~/.ssh:/opt/odoo/ssh:ro
 
-<a name="oca_dependencies"></a>
-### Advanced `oca_dependencies.txt` syntax [^][toc]
-TODO
+<a name="startup_script"></a>
+## Run a bash script at startup [^][toc]
+In some cases, it might be useful to run some commands in the container before
+starting Odoo. After the Odoo target user has been created, the container will
+execute a [bash][bash] script with the container user `root`.
+
+  [bash]: https://www.gnu.org/software/bash/ "GNU Bash"
+
+The script is located at `/opt/scripts/startup.sh` and can be mapped with a
+volume or added via a `Dockerfile`.
 
 <a name="extend_image"></a>
 ## How to extend this image [^][toc]
-TODO
+This image comes with all the dependencies required to run the standard version
+of Odoo. However, some additionnal modules might require an extra setup.
+
+While the startup script is a way to achieve this, the changes it operates in
+the OS of the container are not persistent. Such setup would be performed every
+time the container is restarted, which could induce long delay in the boot
+process.
+
+In order to make those changes persistent, simply create a child Docker image
+by extending this image.
+
+The below example shows how to install the dependencies `captcha` and
+`simplecrypt` for the Odoo v8 module [`website_captcha_nogoogle`][wcn].
+
+  [wcn]: https://github.com/Elico-Corp/odoo-addons/tree/8.0/website_captcha_nogoogle
+
+This is how the `Dockerfile` would look like:
+
+    FROM elicocorp/odoo:8.0
+    MAINTAINER Elico Corp <webmaster@elico-corp.com>
+    RUN pip install --upgrade cffi
+    RUN pip install captcha simple-crypt recaptcha-client
+    RUN pip install --upgrade pillow
+
+Save it as `./build/odoo/Dockerfile`. Then, in `docker-compose.yml`, replace
+the `image` instruction with a `build` instruction, e.g.:
+
+    odoo:
+      build: ./build/odoo
+
+When starting the container with `docker-compose up`, Docker will first build
+the image. In order to re-build the `odoo` image, use:
+
+    $ docker-compose build odoo
+
+**Note:** Extend an image is an extremely versatile feature of Docker. The only
+limit is your imagination! For instance, check out the Elico Corp Odoo Docker
+image [localized for China][odoo-china].
+
+  [odoo-china]: https://github.com/Elico-Corp/odoo-docker-china
+
+<a name="roadmap"></a>
+## Roadmap [^][toc]
+
+* Current list of PIP requirements is maintenained in this repository. It
+should use the `https://github.com/OCA/OCB/blob/10.0/requirements.txt` instead.
+To be noted that this file is not available in v7.
+* Use the standard Odoo code rather than the OCB
+* Use the code of `maintainer-quality-tools` to pull the `oca_dependencies.txt`

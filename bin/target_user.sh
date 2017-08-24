@@ -19,7 +19,7 @@ if [ "$TARGET_UID" ]; then
     if [ $exists == "0" ]; then
         echo $log_src[`date +%F.%H:%M:%S`]' Creating target Odoo user...'
         odoo_user='target-odoo-user'
-        useradd --uid $TARGET_UID --no-log-init -r $odoo_user
+        useradd --uid $TARGET_UID --no-log-init $odoo_user
 
         # Add target user to odoo group so that he can read/write the content
         # of /opt/odoo

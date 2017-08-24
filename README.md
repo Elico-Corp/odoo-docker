@@ -16,7 +16,6 @@ This image is a fork of [XCG Consulting][xcg] Odoo Docker image available
 <a name="toc"></a>
 ## Table of Contents
 - [Usage](#usage)
-    - [Install Docker](#install_docker)
     - [Run the image](#run_image)
     - [Compose example](#compose_example)
 - [Security](#security)
@@ -24,21 +23,20 @@ This image is a fork of [XCG Consulting][xcg] Odoo Docker image available
 - [Host user mapping](#host_user_mapping)
     - [Default host user mapping in Docker](#default_hum)
     - [Host user mapping and volumes](#hum_and_volumes)
-    - [Impact](#hum_impact)
-    - [Solution](#hum_solution)
+    - [Impact](#impact)
+    - [Solution](#solution)
 - [Odoo configuration file](#odoo_conf)
-- [Additionnal addons](#additional_addons)
-    - [Automatically fetch Git repositories](#aa_git_fetch)
-    - [GitHub SSH authentication](#aa_git_ssh)
+- [Additional Odoo modules](#additional_addons)
+    - [Automatically fetch Git repositories](#git_fetch)
+    - [Fetch multiple independent repositories](#fetch_multiple_repos)
+    - [Fetch private GitHub repositories](#git_ssh)
+    - [Advanced `oca_dependencies.txt` syntax](#oca_dependencies)
 - [How to extend this image](#extend_image)
 
   [toc]: #toc "Table of Contents"
 
 <a name="usage"></a>
 ## Usage [^][toc]
-
-<a name="install_docker"></a>
-### Install Docker [^][toc]
 In order to use this image, a recent version of Docker must be installed on the
 host. For more information about Docker Engine, see the
 [official documentation][dk-doc].
@@ -197,11 +195,11 @@ The `docker-compose.yml` should look like:
 
       postgres:
         image: postgres:9.5
+        volumes:
+          - ./volumes/postgres:/var/lib/postgresql/data
         environment:
           - POSTGRES_USER=postgres
           - POSTGRES_PASSWORD=strong_pg_superuser_password
-        volumes:
-          - ./volumes/postgres:/var/lib/postgresql/data
         network_mode: bridge
 
       odoo:
@@ -211,13 +209,13 @@ The `docker-compose.yml` should look like:
           - 127.0.0.1:8069:8069
         links:
           - postgres:db
-        environment:
-           - ODOO_ADMIN_PASSWD=strong_odoo_master_password
-           - ODOO_DB_USER=odoo
-           - ODOO_DB_PASSWORD=strong_pg_odoo_password
         volumes:
-           - ./volumes/odoo/filestore:/opt/odoo/data/filestore
-           - ./volumes/odoo/sessions:/opt/odoo/data/sessions
+          - ./volumes/odoo/filestore:/opt/odoo/data/filestore
+          - ./volumes/odoo/sessions:/opt/odoo/data/sessions
+        environment:
+          - ODOO_ADMIN_PASSWD=strong_odoo_master_password
+          - ODOO_DB_USER=odoo
+          - ODOO_DB_PASSWORD=strong_pg_odoo_password
         network_mode: bridge
 
 **Note:** With this configuration, all the data created in the volumes will
@@ -274,7 +272,7 @@ Following the previous example:
 folder `/var/lib/postgresql/data` will be stored on the host in the folder
 `./volumes/postgres` and belong to the anonymous host user with UID `999`
 
-<a name="hum_impact"></a>
+<a name="impact"></a>
 ### Impact [^][toc]
 When having `root` privileges on the host, the default host user mapping
 behavior is usually not a big issue. The main impact is that the files mapped
@@ -307,7 +305,7 @@ located under his own home folder. This can lead to very annoying situations
 where a user would require the system administrator to help him delete files
 under his own home folder.
 
-<a name="hum_solution"></a>
+<a name="solution"></a>
 ### Solution [^][toc]
 Each Docker image has its own way to deal with host user mapping:
 
@@ -331,6 +329,8 @@ The `docker-compose.yml` should look like:
 
       postgres:
         image: postgres:9.5
+        volumes:
+          - ./volumes/postgres:/var/lib/postgresql/data
         environment:
           - POSTGRES_USER=postgres
           - POSTGRES_PASSWORD=strong_pg_superuser_password
@@ -345,6 +345,9 @@ The `docker-compose.yml` should look like:
           - 127.0.0.1:8069:8069
         links:
           - postgres:db
+        volumes:
+          - ./volumes/odoo/filestore:/opt/odoo/data/filestore
+          - ./volumes/odoo/sessions:/opt/odoo/data/sessions
         environment:
           - TARGET_UID=1001
           - ODOO_ADMIN_PASSWD=strong_odoo_master_password
@@ -355,7 +358,7 @@ The `docker-compose.yml` should look like:
 **Note:** For a more dynamic UID mapping, you can use Compose
 [variable substitution][dk-var]. Simply export the environment variable `UID`
 before starting the container and replace the `UID` with `$UID` in the
-`docker-compose.yml` file.
+`docker-compose.yml`.
 
   [dk-var]: https://docs.docker.com/compose/compose-file/#variable-substitution
 
@@ -384,25 +387,167 @@ ways are:
 
 1. `ADD` the configuration file in `/opt/odoo/etc/odoo.conf` using a
 [Dockerfile][dkf]
-2. Map the `/opt/odoo/etc/odoo.conf` using a [volume][dk-vol]
+2. Map the `/opt/odoo/etc/odoo.conf` using a volume
 
   [dkf]: https://docs.docker.com/engine/reference/builder/
          "Dockerfile reference | Docker Documentation"
 
 <a name="additional_addons"></a>
-## Additionnal addons [^][toc]
-TODO
+## Additional Odoo modules [^][toc]
+This image allows to load additional Odoo modules through the volume
+`/opt/odoo/additional_addons`. When adding modules manually in that folder, the
+Odoo parameter `addons_path` must be defined accordingly:
 
-<a name="aa_git_fetch"></a>
+    addons_path = /opt/odoo/additional_addons,/opt/odoo/sources/odoo/addons
+
+**Note:** The previous configuration assumes that all the modules are at the
+root of the folder `/opt/odoo/additional_addons`. Depending on the folder
+structure, the parameter might need to be adapted.
+
+<a name="git_fetch"></a>
 ### Automatically fetch Git repositories [^][toc]
 
-Based on [`oca_dependencies.txt`][oca-dep]
+This image is able to automatically fetch (e.g. `git clone`) a [Git][git]
+repository containing a set of modules. It is based on the
+[cross repository dependency management][cross-repo-dep] system introduced by
+the [OCA][oca]. For more information about the
+
+  [git]: https://git-scm.com
+  [cross-repo-dep]: https://github.com/OCA/maintainer-quality-tools/pull/159
+  [oca]: https://github.com/OCA/ "Odoo Community Association"
+
+Basically, this image is able to recursively fetch Git repositories in the
+`/opt/odoo/additional_addons` volume. Once all the repositories have been
+fetched, the `addons_path` parameter will be generated automatically.
+
+The cross repository dependency is based on the
+[`oca_dependencies.txt`][oca-dep] syntax.
 
   [oca-dep]: https://github.com/OCA/maintainer-quality-tools/blob/master/sample_files/oca_dependencies.txt
-TODO
 
-<a name="aa_git_ssh"></a>
-### GitHub SSH authentication [^][toc]
+**Note:** This image integrates a Git repositories cache system. If some of the
+repositories already exist in the volume (e.g. when restarting the container),
+the container will pull (e.g. `git pull`) them instead of cloning them, which
+allows for much faster boot.
+
+The easiest way to clone a Git repository is to set the environment variable
+`ADDONS_REPO` with the URL of the repository.
+
+For instance, in order to fetch the [OCA Project][oca-project] Git repository,
+as well as all the Git repositories it depends on, you can use the following
+`docker-compose.yml`:
+
+  [oca-project]: https://github.com/OCA/project
+                 "Odoo Project Management and Services Company Addons"
+
+    version: '3.3'
+    services:
+
+      postgres:
+        image: postgres:9.5
+        volumes:
+          - ./volumes/postgres:/var/lib/postgresql/data
+        environment:
+          - POSTGRES_USER=postgres
+          - POSTGRES_PASSWORD=strong_pg_superuser_password
+          - /etc/passwd:/etc/passwd:ro
+        user: 1001:1001
+        network_mode: bridge
+
+      odoo:
+        image: elicocorp/odoo:10.0
+        command: start
+        ports:
+          - 127.0.0.1:8069:8069
+        links:
+          - postgres:db
+        volumes:
+          - ./volumes/odoo/addons:/opt/odoo/additional_addons
+          - ./volumes/odoo/filestore:/opt/odoo/data/filestore
+          - ./volumes/odoo/sessions:/opt/odoo/data/sessions
+        environment:
+          - ADDONS_REPO=https://github.com/OCA/project.git
+          - TARGET_UID=1001
+          - ODOO_ADMIN_PASSWD=strong_odoo_master_password
+          - ODOO_DB_USER=odoo
+          - ODOO_DB_PASSWORD=strong_pg_odoo_password
+        network_mode: bridge
+
+<a name="fetch_multiple_repos"></a>
+### Fetch multiple independent repositories [^][toc]
+It might be necessary to fetch more than one Git repository (and the
+repositories it depends on). In that case, instead of using the `ADDONS_REPO`
+environment variable, simply create one `oca_dependencies.txt` file and put it
+at the root of the `/opt/odoo/additional_addons` volume.
+
+For instance, if you want to fetch the
+[OCA account payment modules][oca-account-payment] repository along with the
+OCA project repository, put the following `oca_dependencies.txt` in the
+`/opt/odoo/additional_addons` volume:
+
+  [oca-account-payment]: https://github.com/OCA/account-payment
+
+    # list the OCA project dependencies, one per line
+    # add a github url if you need a forked version
+    project https://github.com/OCA/project.git
+    account-payment https://github.com/OCA/account-payment.git
+
+<a name="git_ssh"></a>
+### Fetch private GitHub repositories [^][toc]
+This image is able to pull multiple private GitHub repositories when provided a
+valid SSH key that has read access to these repositories. The URL for GitHub
+SSH authentication is available under the "Clone with SSH" option.
+
+Simply put the SSH private key whose name must be `id_rsa` in the volume
+`/opt/odoo/ssh`. Since Odoo doesn't need to write in that volume, you can use
+the `ro` option to mount a [read-only volume][dk-ro-vol].
+
+  [dk-ro-vol]: https://docs.docker.com/engine/admin/volumes/volumes/#use-a-read-only-volume
+
+The `docker-compose.yml` should look like:
+
+    version: '3.3'
+    services:
+
+      postgres:
+        image: postgres:9.5
+        volumes:
+          - ./volumes/postgres:/var/lib/postgresql/data
+        environment:
+          - POSTGRES_USER=postgres
+          - POSTGRES_PASSWORD=strong_pg_superuser_password
+          - /etc/passwd:/etc/passwd:ro
+        user: 1001:1001
+        network_mode: bridge
+
+      odoo:
+        image: elicocorp/odoo:10.0
+        command: start
+        ports:
+          - 127.0.0.1:8069:8069
+        links:
+          - postgres:db
+        volumes:
+          - ./volumes/odoo/addons:/opt/odoo/additional_addons
+          - ./volumes/odoo/filestore:/opt/odoo/data/filestore
+          - ./volumes/odoo/sessions:/opt/odoo/data/sessions
+          - ./volumes/odoo/ssh:/opt/odoo/ssh:ro
+        environment:
+          - ADDONS_REPO=git@github.com:Elico-Corp/odoo-private-addons.git
+          - TARGET_UID=1001
+          - ODOO_ADMIN_PASSWD=strong_odoo_master_password
+          - ODOO_DB_USER=odoo
+          - ODOO_DB_PASSWORD=strong_pg_odoo_password
+        network_mode: bridge
+
+**Note:** If the host user has a valid SSH key under the `.ssh` folder of his
+home folder, he can map his `.ssh` folder instead, e.g.:
+
+    volumes:
+      - ~/.ssh:/opt/odoo/ssh:ro
+
+<a name="oca_dependencies"></a>
+### Advanced `oca_dependencies.txt` syntax [^][toc]
 TODO
 
 <a name="extend_image"></a>

@@ -115,8 +115,13 @@ VOLUME [ \
   "/opt/scripts" \
 ]
 
-# Use README for the help command
+# Use README for the help command and only keep the "Usage" section
 ADD README.md /usr/share/man/help.txt
+RUN from=$( awk '/^## Usage/{ print NR; exit }' /usr/share/man/help.txt ) && \
+  to=$( awk '/^    \$ docker-compose up/{ print NR; exit }' /usr/share/man/help.txt ) && \
+  head -n $to /usr/share/man/help.txt | \
+  tail -n +$from | \
+  tee /usr/share/man/help.txt > /dev/null
 
 # Set the default entrypoint (non overridable) to run when starting the container
 ADD bin /app/bin/

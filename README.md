@@ -46,9 +46,15 @@ host. For more information about Docker Engine, see the
 
 <a name="run_image"></a>
 ### Run the image [^][toc]
-Running this image without specifying a command will display this help message:
+Running this image without specifying any command will display this help
+message:
 
     $ docker run elicocorp/odoo:10.0
+
+To display the user manual, run the image with the command `man`. Redirecting
+`stdout` to `less` is highly recommended:
+
+    $ docker run elicocorp/odoo:10.0 man | less
 
 To start Odoo, run the image with the command `start`:
 

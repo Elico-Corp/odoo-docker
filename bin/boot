@@ -14,6 +14,12 @@ function help {
     set -e
 }
 
+function man {
+    set +e
+    cat /usr/share/man/man.txt
+    set -e
+}
+
 function _ensure_odoo_user_owns_folder_if_exists {
     if [ -d $1 ]; then
         chown $odoo_user:$odoo_user $1

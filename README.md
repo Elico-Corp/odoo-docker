@@ -11,7 +11,26 @@ This image is a fork of [XCG Consulting][xcg] Odoo Docker image available
   [xcg]: https://www.xcg-consulting.fr/
   [xcgd]: https://hub.docker.com/r/xcgd/odoo/
 
-## Usage
+<a name="toc"></a>
+## Table of Contents
+- [Usage](#usage)
+- [Security](#security)
+- [Data persistency](#data_persistency)
+- [Host user mapping](#host_user_mapping)
+    - [Default host user mapping in Docker](#default_hum)
+    - [Host user mapping and volumes](#hum_and_volumes)
+    - [Impact](#hum_impact)
+    - [Solution](#hum_solution)
+- [Odoo configuration file](#odoo_conf)
+- [Additionnal addons](#additional_addons)
+    - [Automatically pull Git repositories](#aa_git_pull)
+    - [GitHub SSH authentication](#aa_git_ssh)
+- [Customize this image](#customize_image)
+
+  [toc]: #toc "Table of Contents"
+
+<a name="usage"></a>
+## Usage [^][toc]
 In order to use this image, a recent version of [Docker][dk] must be installed
 on the target host. For more information about Docker Engine, see the
 [documentation][dk-doc].
@@ -71,7 +90,7 @@ the local host
 1. Odoo is running without master password
 2. `odoo` PostgreSQL user is a superuser who doesn't require any password
 
-See Security section for more info.
+See [Security](#security) section for more info.
 
 **Note 3:** With this configuration, all the data will be lost once the
 [containers][dk-con] are stopped.
@@ -79,9 +98,10 @@ See Security section for more info.
   [dk-con]: https://www.docker.com/what-container
             "What is a Container | Docker"
 
-See Data persistency section for more info.
+See [Data persistency](#data_persistency) section for more info.
 
-## Security
+<a name="security"></a>
+## Security [^][toc]
 In order to improve the security, it is recommended to:
 
 1. set a master password for Odoo using `ODOO_ADMIN_PASSWD`
@@ -128,7 +148,8 @@ outside). For instance:
         ports:
           - 127.0.0.1:12345:8069
 
-## Data persistency
+<a name="data_persistency"></a>
+## Data persistency [^][toc]
 As soon as the containers are removed, all the modifications (e.g. database,
 attachments, etc.) will be lost. There are 2 main [volumes][dk-vol] that must
 be made persistent in order to preserve the data:
@@ -183,9 +204,11 @@ belong to the user whose UID matches the user running inside the container.
 
 See Host user mapping section for more info.
 
-## Host user mapping
+<a name="host_user_mapping"></a>
+## Host user mapping [^][toc]
 
-### Default host user mapping in Docker
+<a name="default_hum"></a>
+### Default host user mapping in Docker [^][toc]
 Each Docker image defines its own [users][dk-user].
 
   [dk-user]: https://docs.docker.com/engine/userguide/eng-image/dockerfile_best-practices/#user
@@ -215,7 +238,8 @@ PostgreSQL image with the default user, the PostgreSQL process executed by the
 `postgres` user inside the container will actually be executed by the anonymous
 host user with UID `999`.
 
-### Host user mapping and volumes
+<a name="hum_and_volumes"></a>
+### Host user mapping and volumes [^][toc]
 When the user inside the container owns files that belong to a volume, the
 corresponding files in the folder mapped to the volume on the host will
 actually belong to the corresponding user on the host.
@@ -229,7 +253,8 @@ For instance, in the previous example:
 folder `/var/lib/postgresql/data` will be stored on the host in the folder
 `./volumes/postgres` and belong to the anonymous host user with UID `999`
 
-### Impact
+<a name="hum_impact"></a>
+### Impact [^][toc]
 When having `root` privileges on the host, the default host user mapping
 behavior is usually not a big issue. The main impact is that the files mapped
 with a volume might belong to users that don't have anything to do with the
@@ -261,10 +286,12 @@ located under his own home folder. This can lead to very annoying situations
 where a developer would require the system administrator to delete files under
 his own home folder.
 
-### Solution
+<a name="hum_solution"></a>
+### Solution [^][toc]
 TODO
 
-## Odoo configuration file
+<a name="odoo_conf"></a>
+## Odoo configuration file [^][toc]
 The configuration file is generated automatically at startup. Any available
 Odoo parameter can be provided as an environment variable, prefixed by `ODOO_`.
 
@@ -293,18 +320,22 @@ ways are:
   [dkf]: https://docs.docker.com/engine/reference/builder/
          "Dockerfile reference | Docker Documentation"
 
-## Additionnal addons
+<a name="additional_addons"></a>
+## Additionnal addons [^][toc]
 TODO
 
-### Automatically pull Git repositories
+<a name="aa_git_pull"></a>
+### Automatically pull Git repositories [^][toc]
 
 Based on [`oca_dependencies.txt`][oca-dep]
 
   [oca-dep]: https://github.com/OCA/maintainer-quality-tools/blob/master/sample_files/oca_dependencies.txt
 TODO
 
-### GitHub SSH authentication
+<a name="aa_git_ssh"></a>
+### GitHub SSH authentication [^][toc]
 TODO
 
-## Customize this image
+<a name="customize_image"></a>
+## Customize this image [^][toc]
 TODO

@@ -48,15 +48,16 @@ function _setup_ssh_key {
     sudo -i -u $odoo_user cp /opt/odoo/ssh/id_rsa $ssh_folder
 
     echo $log_src[`date +%F.%H:%M:%S`]' Scanning GitHub key...'
-    ssh-keyscan github.com | \
-        sudo -i -u $odoo_user tee $ssh_folder/known_hosts &> /dev/null
+    # Hide ssh-keyscan stderr output since it's actually log message
+    ssh-keyscan github.com 2> /dev/null | \
+        sudo -i -u $odoo_user tee $ssh_folder/known_hosts > /dev/null
 
     # Bind SSH key to GitHub host
     echo "host github.com
             HostName github.com
             User git
             IdentityFile $ssh_folder/id_rsa" | \
-        sudo -i -u $odoo_user tee $ssh_folder/config &> /dev/null
+        sudo -i -u $odoo_user tee $ssh_folder/config > /dev/null
 
     # Secure SSH key
     chmod 400 $ssh_folder/id_rsa
@@ -134,7 +135,7 @@ function start {
 # smart shutdown on SIGINT and SIGTERM
 function on_exit() {
     kill -TERM $SERVICE_PID
-    wait $SERVICE_PID 2>/dev/null
+    wait $SERVICE_PID 2> /dev/null
     exit 0
 }
 trap on_exit INT TERM

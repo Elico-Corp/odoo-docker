@@ -92,8 +92,8 @@ function start {
     # If the folders mapped to the volumes didn't exist, Docker has created
     # them with root instead of the target Odoo user. Making sure to give back
     # the ownership to the corresponding host user.
-    chown $odoo_user:$odoo_user /opt/odoo/{etc,additional_addons,data,ssh,var} \
-                                /opt/odoo/data/{addons,filestore,sessions} \
+    chown $odoo_user:$odoo_user /opt/odoo/{etc,additional_addons,data,var} \
+                                /opt/odoo/data/{filestore,sessions} \
                                 /opt/odoo/var/{run,log,egg-cache}
 
     echo $log_src[`date +%F.%H:%M:%S`]' Searching for conf file...'

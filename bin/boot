@@ -42,22 +42,23 @@ function _update_odoo_conf_params {
 function _setup_ssh_key {
     # Create SSH config folder in $HOME folder of Odoo target user
     ssh_folder=$( getent passwd $odoo_user | cut -d: -f6 )/.ssh
-    mkdir $ssh_folder
+    sudo -i -u $odoo_user mkdir $ssh_folder
 
     # Copy SSH private key from /opt/odoo/ssh
-    cp /opt/odoo/ssh/id_rsa $ssh_folder
+    sudo -i -u $odoo_user cp /opt/odoo/ssh/id_rsa $ssh_folder
 
     echo $log_src[`date +%F.%H:%M:%S`]' Scanning GitHub key...'
-    ssh-keyscan github.com > $ssh_folder/known_hosts
+    ssh-keyscan github.com | \
+        sudo -i -u $odoo_user tee $ssh_folder/known_hosts &> /dev/null
 
-    # Setup SSH config
-    echo "host github.com" > $ssh_folder/config
-    echo "    HostName github.com" >> $ssh_folder/config
-    echo "    User git" >> $ssh_folder/config
-    echo "    IdentityFile $ssh_folder/id_rsa" >> $ssh_folder/config
+    # Bind SSH key to GitHub host
+    echo "host github.com
+            HostName github.com
+            User git
+            IdentityFile $ssh_folder/id_rsa" | \
+        sudo -i -u $odoo_user tee $ssh_folder/config &> /dev/null
 
-    # Secure SSH folder
-    chown -R $odoo_user:$odoo_user $ssh_folder
+    # Secure SSH key
     chmod 400 $ssh_folder/id_rsa
 }
 

@@ -107,10 +107,10 @@ VOLUME [ \
 ]
 
 # Use README for the help command and only keep the "Usage" section
-ADD README.md /usr/share/man/help.txt
-RUN from=$( awk '/^## Usage/{ print NR; exit }' /usr/share/man/help.txt ) && \
-  to=$( awk '/^    \$ docker-compose up/{ print NR; exit }' /usr/share/man/help.txt ) && \
-  head -n $to /usr/share/man/help.txt | \
+ADD README.md /usr/share/man/man.txt
+RUN from=$( awk '/^## Usage/{ print NR; exit }' /usr/share/man/man.txt ) && \
+  to=$( awk '/^    \$ docker-compose up/{ print NR; exit }' /usr/share/man/man.txt ) && \
+  head -n $to /usr/share/man/man.txt | \
   tail -n +$from | \
   tee /usr/share/man/help.txt > /dev/null
 

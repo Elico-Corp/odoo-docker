@@ -1,28 +1,410 @@
-# odoo-docker
-Docker files to build dockers based on:
-* standard Odoo code
-* OCB code
+# elicocorp/odoo
+Simple yet powerful [Odoo][odoo] image for [Docker][dk] based on [OCB][ocb]
+code and maintained by [Elico Corp][ec].
 
-This work is original based on the docker from http://www.xcg-consulting.fr and available here:
-https://hub.docker.com/r/xcgd/odoo/
+  [odoo]: https://www.odoo.com/
+  [dk]: https://www.docker.com/
+  [ocb]: https://github.com/OCA/OCB "Odoo Community Backports"
+  [ec]: https://www.elico-corp.com/
 
-# Roadmap
-* Instead of having a predefined list of odoo.conf parameters available as ENV variables, allow
-  to change any of them dynamically.
-  1. Suggested solution:
-    * pattern for ENV variable: "ODOO_CONF_" + parameter + "=" + value, e.g.:
-      * ODOO_CONF_dbfilter=^stable_.*
-      * ODOO_CONF_db_user=odoo
-      * ODOO_CONF_limit_memory_soft=671088640
-    * then, in the boot script:
-      * loop over each parameter of odoo.conf
-      * check if there's an ENV variable "ODOO_CONF_" + parameter
-      * if so, replace the parameter in odoo.conf
-  2. Other suggestion:
-    * remove all optional parameters from odoo.conf template, only keep the mandatory/important
-      ones (e.g. admin_passwd, db_user, etc.)
-    * replace those parameters using the current function (or using solution #1)
-    * either:
-      1. append a user defined odoo.conf to the one in the image (add this user defined
-      odoo.conf by Dockerfile or by volume)
-      2. or use ENV variables to customize parameters (I'm more in favor of that solution)
+This image is a fork of [XCG Consulting][xcg] Odoo Docker image available
+[here][xcgd].
+
+  [xcg]: https://www.xcg-consulting.fr/
+  [xcgd]: https://hub.docker.com/r/xcgd/odoo/
+
+<a name="toc"></a>
+## Table of Contents
+- [Usage](#usage)
+    - [Install Docker](#install_docker)
+    - [Run the image](#run_image)
+    - [Compose example](#compose_example)
+- [Security](#security)
+- [Data persistency](#data_persistency)
+- [Host user mapping](#host_user_mapping)
+    - [Default host user mapping in Docker](#default_hum)
+    - [Host user mapping and volumes](#hum_and_volumes)
+    - [Impact](#hum_impact)
+    - [Solution](#hum_solution)
+- [Odoo configuration file](#odoo_conf)
+- [Additionnal addons](#additional_addons)
+    - [Automatically fetch Git repositories](#aa_git_fetch)
+    - [GitHub SSH authentication](#aa_git_ssh)
+- [How to extend this image](#extend_image)
+
+  [toc]: #toc "Table of Contents"
+
+<a name="usage"></a>
+## Usage [^][toc]
+
+<a name="install_docker"></a>
+### Install Docker [^][toc]
+In order to use this image, a recent version of Docker must be installed on the
+host. For more information about Docker Engine, see the
+[official documentation][dk-doc].
+
+  [dk-doc]: https://docs.docker.com/engine/
+
+<a name="run_image"></a>
+### Run the image [^][toc]
+Running this image without specifying a command will display this help message:
+
+    $ docker run elicocorp/odoo:10.0
+
+To start Odoo, run the image with the command `start`:
+
+    $ docker run elicocorp/odoo:10.0 start
+
+The easiest way to use this image is to run it along with a [PostgreSQL][pg]
+image. By default, Odoo is configured to connect with a PostgreSQL host named
+`db`.
+
+  [pg]: https://hub.docker.com/_/postgres/
+
+**Note:** The [PostgreSQL image][ec-pg] of Elico Corp can be used as well.
+
+  [ec-pg]: https://hub.docker.com/r/elicocorp/postgres/
+
+<a name="compose_example"></a>
+### Compose example [^][toc]
+Below is an example of a simple `docker-compose.yml` to use this image. For
+more information about Compose, see the [official documentation][dc-doc].
+
+  [dc-doc]: https://docs.docker.com/compose/
+
+    version: '3.3'
+    services:
+
+      postgres:
+        image: postgres:9.5
+        environment:
+          - POSTGRES_USER=odoo
+        network_mode: bridge
+
+      odoo:
+        image: elicocorp/odoo:10.0
+        command: start
+        ports:
+          - 127.0.0.1:8069:8069
+        links:
+          - postgres:db
+        environment:
+          - ODOO_DB_USER=odoo
+        network_mode: bridge
+
+Once this file is created, simply move to the corresponding folder and run the
+following command to start Odoo:
+
+    $ docker-compose up
+
+**Note 1:** With this configuration, Odoo will be accessible at the following
+URL *only* from the local host: <http://127.0.0.1:8069>
+
+It is possible to publish it following one of these options:
+
+1. map a reverse-proxy to `127.0.0.1:8069`
+2. remove the `127.0.0.1:` prefix in order to publish the port `8069` outside
+the local host
+
+**Note 2:** With this configuration:
+
+1. Odoo is running without master password
+2. `odoo` PostgreSQL user is a superuser who doesn't require any password
+
+See [Security](#security) section for more info.
+
+**Note 3:** With this configuration, all the data will be lost once the
+[containers][dk-con] are stopped.
+
+  [dk-con]: https://www.docker.com/what-container
+            "What is a Container | Docker"
+
+See [Data persistency](#data_persistency) section for more info.
+
+<a name="security"></a>
+## Security [^][toc]
+In order to improve the security, it is recommended to:
+
+1. set a master password for Odoo using `ODOO_ADMIN_PASSWD`
+2. start PostgreSQL with a different superuser (e.g. `postgres`)
+3. give the superuser a password using `POSTGRES_PASSWORD`
+4. create a separate PostgreSQL user for Odoo (e.g. `odoo`) with his own
+password and specify it using `ODOO_DB_PASSWORD`
+
+**Note:** Run below SQL queries with PostgreSQL superuser to create the `odoo`
+user:
+
+    CREATE user odoo WITH password 'strong_pg_odoo_password';
+    ALTER user odoo WITH createdb;
+
+The `docker-compose.yml` should look like:
+
+    version: '3.3'
+    services:
+
+      postgres:
+        image: postgres:9.5
+        environment:
+          - POSTGRES_USER=postgres
+          - POSTGRES_PASSWORD=strong_pg_superuser_password
+        network_mode: bridge
+
+      odoo:
+        image: elicocorp/odoo:10.0
+        command: start
+        ports:
+          - 127.0.0.1:8069:8069
+        links:
+          - postgres:db
+        environment:
+          - ODOO_ADMIN_PASSWD=strong_odoo_master_password
+          - ODOO_DB_USER=odoo
+          - ODOO_DB_PASSWORD=strong_pg_odoo_password
+        network_mode: bridge
+
+**Note:** If Odoo is behind a reverse proxy, it is also suggested to change the
+port published by the container (though this port is actually not opened to the
+outside). For instance:
+
+        ports:
+          - 127.0.0.1:12345:8069
+
+<a name="data_persistency"></a>
+## Data persistency [^][toc]
+As soon as the containers are removed, all the modifications (e.g. database,
+attachments, etc.) will be lost. There are 2 main [volumes][dk-vol] that must
+be made persistent in order to preserve the data:
+
+  [dk-vol]: https://docs.docker.com/engine/admin/volumes/volumes/
+            "Use volumes | Docker Documentation"
+
+1. the PostgreSQL database in `/var/lib/postgresql/data`
+2. the Odoo filestore in `/opt/odoo/data/filestore`
+
+Optionally, it is also possible to map the Odoo sessions folder in
+`/opt/odoo/data/sessions`
+
+In the following example, these volumes are mapped under the folder `volumes`
+which is in the same folder as the `docker-compose.yml`. This command will
+create the corresponding folders:
+
+    mkdir -p ./volumes/{postgres,odoo/filestore,odoo/sessions}
+
+The `docker-compose.yml` should look like:
+
+    version: '3.3'
+    services:
+
+      postgres:
+        image: postgres:9.5
+        environment:
+          - POSTGRES_USER=postgres
+          - POSTGRES_PASSWORD=strong_pg_superuser_password
+        volumes:
+          - ./volumes/postgres:/var/lib/postgresql/data
+        network_mode: bridge
+
+      odoo:
+        image: elicocorp/odoo:10.0
+        command: start
+        ports:
+          - 127.0.0.1:8069:8069
+        links:
+          - postgres:db
+        environment:
+           - ODOO_ADMIN_PASSWD=strong_odoo_master_password
+           - ODOO_DB_USER=odoo
+           - ODOO_DB_PASSWORD=strong_pg_odoo_password
+        volumes:
+           - ./volumes/odoo/filestore:/opt/odoo/data/filestore
+           - ./volumes/odoo/sessions:/opt/odoo/data/sessions
+        network_mode: bridge
+
+**Note:** With this configuration, all the data created in the volumes will
+belong to the user whose UID matches the user running inside the container.
+
+See Host user mapping section for more info.
+
+<a name="host_user_mapping"></a>
+## Host user mapping [^][toc]
+
+<a name="default_hum"></a>
+### Default host user mapping in Docker [^][toc]
+Each Docker image defines its own [users][dk-user]. Users only exist inside the
+running container.
+
+  [dk-user]: https://docs.docker.com/engine/userguide/eng-image/dockerfile_best-practices/#user
+
+For instance:
+
+* in `elicocorp/odoo` image, the default user that will run the Odoo process is
+`odoo` with UID `1000`
+* in `postgres` image, the default user that will run the PostgreSQL process is
+`postgres` with UID `999`
+
+Whenever those users are used inside the container, Docker will actually use
+the corresponding user on the host running Docker. The mapping is made on the
+UID, not on the user name.
+
+If the user `elico` with UID `1000` exists on the host, when running the Odoo
+image with the default user, the Odoo process executed by the `odoo` user
+inside the container will actually be executed by the host user `elico`.
+
+**Note:** The users don't have to actually exist on the host for the container
+to use them. Anonymous users with the corresponding UID will be created
+automatically.
+
+If the with UID `999` doesn't exist on the host, when running the PostgreSQL
+image with the default user, the PostgreSQL process executed by the `postgres`
+user inside the container will actually be executed by the anonymous host user
+with UID `999`.
+
+<a name="hum_and_volumes"></a>
+### Host user mapping and volumes [^][toc]
+When the user inside the container owns files that belong to a volume, the
+corresponding files in the folder mapped to the volume on the host will
+actually belong to the corresponding user on the host.
+
+Following the previous example:
+
+* in the Odoo container, the files created by the `odoo` user in the folder
+`/opt/odoo/data/filestore` will be stored on the host in the folder
+`./volumes/odoo/filestore` and belong to the host user `elico`
+* in the PostgreSQL container, the files created by the `postgres` user in the
+folder `/var/lib/postgresql/data` will be stored on the host in the folder
+`./volumes/postgres` and belong to the anonymous host user with UID `999`
+
+<a name="hum_impact"></a>
+### Impact [^][toc]
+When having `root` privileges on the host, the default host user mapping
+behavior is usually not a big issue. The main impact is that the files mapped
+with a volume might belong to users that don't have anything to do with the
+corresponding Docker services.
+
+In the previous example:
+
+* the host user `elico` will be able to read the content of the Odoo filestore
+* the anonymous host user with UID `999` will be able to read the PostgreSQL
+database files
+
+It is possible to avoid this by creating host users with the corresponding UIDs
+in order to control which host user owns the files in a volume.
+
+However, a user with limited system privileges (e.g. no `sudo`) will have a
+bigger issue. The typical use case is a user with limited system privileges
+that maps a volume inside his home folder. He would expect to own all the files
+under his home folder, which won't be the case.
+
+Following the previous example, if the host user `seb` with UID `1001` starts
+the image from his home folder:
+
+* the files in `./volumes/odoo/filestore` will belong to the host user `elico`
+* the files in `./volumes/postgres` will belong to the anonymous host user with
+UID `999`
+
+The host user `seb` will not be able to access those files even though they are
+located under his own home folder. This can lead to very annoying situations
+where a user would require the system administrator to help him delete files
+under his own home folder.
+
+<a name="hum_solution"></a>
+### Solution [^][toc]
+Each Docker image has its own way to deal with host user mapping:
+
+* for PostgreSQL, see the [official documentation][pg] (section "Arbitrary
+--user Notes")
+* for this image, use the environment variable `TARGET_UID` as described below
+
+First, the host user needs to find out his UID:
+
+    $ echo $UID
+
+Then, simply assign this UID to the environment variable `TARGET_UID`.
+
+After starting the Docker containers, all the files created in the volumes will
+belong to the corresponding host user.
+
+The `docker-compose.yml` should look like:
+
+    version: '3.3'
+    services:
+
+      postgres:
+        image: postgres:9.5
+        environment:
+          - POSTGRES_USER=postgres
+          - POSTGRES_PASSWORD=strong_pg_superuser_password
+          - /etc/passwd:/etc/passwd:ro
+        user: 1001:1001
+        network_mode: bridge
+
+      odoo:
+        image: elicocorp/odoo:10.0
+        command: start
+        ports:
+          - 127.0.0.1:8069:8069
+        links:
+          - postgres:db
+        environment:
+          - TARGET_UID=1001
+          - ODOO_ADMIN_PASSWD=strong_odoo_master_password
+          - ODOO_DB_USER=odoo
+          - ODOO_DB_PASSWORD=strong_pg_odoo_password
+        network_mode: bridge
+
+**Note:** For a more dynamic UID mapping, you can use Compose
+[variable substitution][dk-var]. Simply export the environment variable `UID`
+before starting the container and replace the `UID` with `$UID` in the
+`docker-compose.yml` file.
+
+  [dk-var]: https://docs.docker.com/compose/compose-file/#variable-substitution
+
+<a name="odoo_conf"></a>
+## Odoo configuration file [^][toc]
+The configuration file is generated automatically at startup. Any available
+Odoo parameter can be provided as an environment variable, prefixed by `ODOO_`.
+
+**Note:** As a convention, it is preferrable to use only big caps but this is
+not mandatory. The parameters will be converted to small caps in the
+configuration file.
+
+In the previous `docker-compose.yml` examples, the following Odoo parameters
+have already been defined:
+
+* `admin_passwd`: environment variable `ODOO_ADMIN_PASSWD`
+* `db_user`: environment variable `ODOO_DB_USER`
+* `db_password`: environment variable `ODOO_DB_PASSWORD`
+
+For a complete list of Odoo parameters, see the [documentation][od-par].
+
+  [od-par]: https://www.odoo.com/documentation/10.0/reference/cmdline.html
+
+It is also possible to use a custom Odoo configuration file. The most common
+ways are:
+
+1. `ADD` the configuration file in `/opt/odoo/etc/odoo.conf` using a
+[Dockerfile][dkf]
+2. Map the `/opt/odoo/etc/odoo.conf` using a [volume][dk-vol]
+
+  [dkf]: https://docs.docker.com/engine/reference/builder/
+         "Dockerfile reference | Docker Documentation"
+
+<a name="additional_addons"></a>
+## Additionnal addons [^][toc]
+TODO
+
+<a name="aa_git_fetch"></a>
+### Automatically fetch Git repositories [^][toc]
+
+Based on [`oca_dependencies.txt`][oca-dep]
+
+  [oca-dep]: https://github.com/OCA/maintainer-quality-tools/blob/master/sample_files/oca_dependencies.txt
+TODO
+
+<a name="aa_git_ssh"></a>
+### GitHub SSH authentication [^][toc]
+TODO
+
+<a name="extend_image"></a>
+## How to extend this image [^][toc]
+TODO

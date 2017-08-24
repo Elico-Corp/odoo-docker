@@ -74,11 +74,11 @@ RUN dpkg -i /opt/sources/wkhtmltox.deb
 # Startup script for custom setup
 ADD sources/startup.sh /opt/scripts/startup.sh
 
-# create the odoo user
-RUN adduser --home=/opt/odoo --disabled-password --gecos "" --shell=/bin/bash odoo
+# Create the odoo user
+RUN useradd --home=/opt/odoo --no-log-init -r odoo
 
-# Switch to user odoo to create the folders mapped with volumes, else the corresponding
-# folders will be created by root on the host
+# Switch to user odoo to create the folders mapped with volumes, else the
+# corresponding folders will be created by root on the host
 USER odoo
 
 # If the folders are created with "RUN mkdir" command, they will belong to root

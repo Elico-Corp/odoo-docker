@@ -106,9 +106,15 @@ VOLUME [ \
   "/opt/scripts" \
 ]
 
-# Use README for the help command and only keep the "Usage" section
+# Use README for the help & man commands
 ADD README.md /usr/share/man/man.txt
+# Remove anchors and links to anchors to improve readability
+RUN sed -i '/^<a name="/ d' /usr/share/man/man.txt
+RUN sed -i -e 's/ \[\^\]\[toc\]//g' /usr/share/man/man.txt
+RUN sed -i -e 's/\(\[.*\]\)(#.*)/\1/g' /usr/share/man/man.txt
+# For help command, only keep the "Usage" section
 RUN from=$( awk '/^## Usage/{ print NR; exit }' /usr/share/man/man.txt ) && \
+  from=$(expr $from + 1) && \
   to=$( awk '/^    \$ docker-compose up/{ print NR; exit }' /usr/share/man/man.txt ) && \
   head -n $to /usr/share/man/man.txt | \
   tail -n +$from | \

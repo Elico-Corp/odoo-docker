@@ -472,6 +472,17 @@ as well as all the Git repositories it depends on, you can use the following
           - ODOO_DB_PASSWORD=strong_pg_odoo_password
         network_mode: bridge
 
+**Note:** After the repositories have been fetched, it might not be required to
+pull them every time the container is restarted. In that case, simply set the
+environment variable `FETCH_OCA_DEPENDENCIES` to `False` in order to boot much
+faster, e.g.:
+
+    environment:
+      - FETCH_OCA_DEPENDENCIES=False
+
+In order to update the code of the Git repositories, set this variable to
+`True` or just remove it.
+
 <a name="fetch_multiple_repos"></a>
 ### Fetch multiple independent repositories [^][toc]
 It might be necessary to fetch more than one Git repository (and the

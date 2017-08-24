@@ -1,5 +1,9 @@
 FROM ubuntu:14.04
-MAINTAINER Elico Corp <contact@elico-corp.com>
+MAINTAINER Elico Corp <webmaster@elico-corp.com>
+
+# Define build constants
+ENV ODOO_VERSION=9.0 \
+  PG_VERSION=9.5
 
 # Set timezone to UTC
 RUN ln -sf /usr/share/zoneinfo/Etc/UTC /etc/localtime
@@ -14,17 +18,17 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com \
   --recv-keys B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
 
 # Add PostgreSQL's repository. It contains the most recent stable release
-#     of PostgreSQL, ``9.5``.
-# install dependencies as distrib packages when system bindings are required
-# some of them extend the basic odoo requirements for a better "apps" compatibility
-# most dependencies are distributed as wheel packages at the next step
+# of PostgreSQL.
+# Install dependencies as distrib packages when system bindings are required.
+# Some of them extend the basic Odoo requirements for a better "apps"
+# compatibility.
+# Most dependencies are distributed as PIP packages at the next step
 RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main" > \
   /etc/apt/sources.list.d/pgdg.list && \
   apt-get update && \
   apt-get -yq install \
-    adduser \
     ghostscript \
-    postgresql-client-9.5 \
+    postgresql-client-$PG_VERSION \
     python \
     python-pip \
     python-imaging \
@@ -88,7 +92,7 @@ RUN /bin/bash -c "mkdir -p /opt/odoo/var/{run,log,egg-cache}"
 
 # Add Odoo OCB sources and remove .git folder in order to reduce image size
 WORKDIR /opt/odoo/sources
-RUN git clone https://github.com/OCA/OCB.git -b 9.0 odoo && \
+RUN git clone https://github.com/OCA/OCB.git -b $ODOO_VERSION odoo && \
   rm -rf odoo/.git
 
 ADD sources/odoo.conf /opt/odoo/etc/odoo.conf

@@ -66,7 +66,7 @@ RUN dpkg -i /opt/sources/wkhtmltox.deb
 ADD sources/startup.sh /opt/scripts/startup.sh
 
 # Create the odoo user
-RUN useradd --home=/opt/odoo --no-log-init -r odoo
+RUN useradd --create-home --home-dir /opt/odoo --no-log-init odoo
 
 # Switch to user odoo to create the folders mapped with volumes, else the
 # corresponding folders will be created by root on the host

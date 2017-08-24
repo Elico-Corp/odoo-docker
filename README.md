@@ -1,7 +1,9 @@
 # elicocorp/odoo
-Simple yet powerful Odoo image for Docker based on [OCB][ocb] code and
-maintained by [Elico Corp][ec].
+Simple yet powerful [Odoo][odoo] image for [Docker][dk] based on [OCB][ocb]
+code and maintained by [Elico Corp][ec].
 
+  [odoo]: https://www.odoo.com/
+  [dk]: https://www.docker.com/
   [ocb]: https://github.com/OCA/OCB "Odoo Community Backports"
   [ec]: https://www.elico-corp.com/
 
@@ -14,6 +16,9 @@ This image is a fork of [XCG Consulting][xcg] Odoo Docker image available
 <a name="toc"></a>
 ## Table of Contents
 - [Usage](#usage)
+    - [Install Docker](#install_docker)
+    - [Run the image](#run_image)
+    - [Compose example](#compose_example)
 - [Security](#security)
 - [Data persistency](#data_persistency)
 - [Host user mapping](#host_user_mapping)
@@ -23,27 +28,36 @@ This image is a fork of [XCG Consulting][xcg] Odoo Docker image available
     - [Solution](#hum_solution)
 - [Odoo configuration file](#odoo_conf)
 - [Additionnal addons](#additional_addons)
-    - [Automatically pull Git repositories](#aa_git_pull)
+    - [Automatically fetch Git repositories](#aa_git_fetch)
     - [GitHub SSH authentication](#aa_git_ssh)
-- [Customize this image](#customize_image)
+- [How to extend this image](#extend_image)
 
   [toc]: #toc "Table of Contents"
 
 <a name="usage"></a>
 ## Usage [^][toc]
-In order to use this image, a recent version of [Docker][dk] must be installed
-on the target host. For more information about Docker Engine, see the
-[documentation][dk-doc].
 
-  [dk]: https://www.docker.com/
+<a name="install_docker"></a>
+### Install Docker [^][toc]
+In order to use this image, a recent version of Docker must be installed on the
+host. For more information about Docker Engine, see the
+[official documentation][dk-doc].
+
   [dk-doc]: https://docs.docker.com/engine/
 
+<a name="run_image"></a>
+### Run the image [^][toc]
 Running this image without specifying a command will display this help message:
 
-    docker run elicocorp/odoo:10.0
+    $ docker run elicocorp/odoo:10.0
+
+To start Odoo, run the image with the command `start`:
+
+    $ docker run elicocorp/odoo:10.0 start
 
 The easiest way to use this image is to run it along with a [PostgreSQL][pg]
-image.
+image. By default, Odoo is configured to connect with a PostgreSQL host named
+`db`.
 
   [pg]: https://hub.docker.com/_/postgres/
 
@@ -51,8 +65,10 @@ image.
 
   [ec-pg]: https://hub.docker.com/r/elicocorp/postgres/
 
-Below is an example of a simple `docker-compose.yml` to use this image.
-For more information about Docker Compose, see the [documentation][dc-doc].
+<a name="compose_example"></a>
+### Compose example [^][toc]
+Below is an example of a simple `docker-compose.yml` to use this image. For
+more information about Compose, see the [official documentation][dc-doc].
 
   [dc-doc]: https://docs.docker.com/compose/
 
@@ -75,6 +91,11 @@ For more information about Docker Compose, see the [documentation][dc-doc].
         environment:
           - ODOO_DB_USER=odoo
         network_mode: bridge
+
+Once this file is created, simply move to the corresponding folder and run the
+following command to start Odoo:
+
+    $ docker-compose up
 
 **Note 1:** With this configuration, Odoo will be accessible at the following
 URL *only* from the local host: <http://127.0.0.1:8069>
@@ -209,7 +230,8 @@ See Host user mapping section for more info.
 
 <a name="default_hum"></a>
 ### Default host user mapping in Docker [^][toc]
-Each Docker image defines its own [users][dk-user].
+Each Docker image defines its own [users][dk-user]. Users only exist inside the
+running container.
 
   [dk-user]: https://docs.docker.com/engine/userguide/eng-image/dockerfile_best-practices/#user
 
@@ -224,19 +246,18 @@ Whenever those users are used inside the container, Docker will actually use
 the corresponding user on the host running Docker. The mapping is made on the
 UID, not on the user name.
 
-For instance, if the user `elico` with UID `1000` exists on the host, when
-running the Odoo image with the default user, the Odoo process executed by the
-`odoo` user inside the container will actually be executed by the host user
-`elico`.
+If the user `elico` with UID `1000` exists on the host, when running the Odoo
+image with the default user, the Odoo process executed by the `odoo` user
+inside the container will actually be executed by the host user `elico`.
 
 **Note:** The users don't have to actually exist on the host for the container
 to use them. Anonymous users with the corresponding UID will be created
 automatically.
 
-For instance, if the with UID `999` doesn't exist on the host, when running the
-PostgreSQL image with the default user, the PostgreSQL process executed by the
-`postgres` user inside the container will actually be executed by the anonymous
-host user with UID `999`.
+If the with UID `999` doesn't exist on the host, when running the PostgreSQL
+image with the default user, the PostgreSQL process executed by the `postgres`
+user inside the container will actually be executed by the anonymous host user
+with UID `999`.
 
 <a name="hum_and_volumes"></a>
 ### Host user mapping and volumes [^][toc]
@@ -244,7 +265,7 @@ When the user inside the container owns files that belong to a volume, the
 corresponding files in the folder mapped to the volume on the host will
 actually belong to the corresponding user on the host.
 
-For instance, in the previous example:
+Following the previous example:
 
 * in the Odoo container, the files created by the `odoo` user in the folder
 `/opt/odoo/data/filestore` will be stored on the host in the folder
@@ -260,7 +281,7 @@ behavior is usually not a big issue. The main impact is that the files mapped
 with a volume might belong to users that don't have anything to do with the
 corresponding Docker services.
 
-For instance, in the previous example:
+In the previous example:
 
 * the host user `elico` will be able to read the content of the Odoo filestore
 * the anonymous host user with UID `999` will be able to read the PostgreSQL
@@ -270,12 +291,12 @@ It is possible to avoid this by creating host users with the corresponding UIDs
 in order to control which host user owns the files in a volume.
 
 However, a user with limited system privileges (e.g. no `sudo`) will have a
-bigger issue. The typical use case is a developer with limited system
-privileges that maps a volume inside his home folder. He would expect to own
-all the files under his home folder, which won't be the case.
+bigger issue. The typical use case is a user with limited system privileges
+that maps a volume inside his home folder. He would expect to own all the files
+under his home folder, which won't be the case.
 
-For instance, following the previous example, if the host user `seb` with UID
-`1001` starts the image from his home folder:
+Following the previous example, if the host user `seb` with UID `1001` starts
+the image from his home folder:
 
 * the files in `./volumes/odoo/filestore` will belong to the host user `elico`
 * the files in `./volumes/postgres` will belong to the anonymous host user with
@@ -283,12 +304,60 @@ UID `999`
 
 The host user `seb` will not be able to access those files even though they are
 located under his own home folder. This can lead to very annoying situations
-where a developer would require the system administrator to delete files under
-his own home folder.
+where a user would require the system administrator to help him delete files
+under his own home folder.
 
 <a name="hum_solution"></a>
 ### Solution [^][toc]
-TODO
+Each Docker image has its own way to deal with host user mapping:
+
+* for PostgreSQL, see the [official documentation][pg] (section "Arbitrary
+--user Notes")
+* for this image, use the environment variable `TARGET_UID` as described below
+
+First, the host user needs to find out his UID:
+
+    $ echo $UID
+
+Then, simply assign this UID to the environment variable `TARGET_UID`.
+
+After starting the Docker containers, all the files created in the volumes will
+belong to the corresponding host user.
+
+The `docker-compose.yml` should look like:
+
+    version: '3.3'
+    services:
+
+      postgres:
+        image: postgres:9.5
+        environment:
+          - POSTGRES_USER=postgres
+          - POSTGRES_PASSWORD=strong_pg_superuser_password
+          - /etc/passwd:/etc/passwd:ro
+        user: 1001:1001
+        network_mode: bridge
+
+      odoo:
+        image: elicocorp/odoo:10.0
+        command: start
+        ports:
+          - 127.0.0.1:8069:8069
+        links:
+          - postgres:db
+        environment:
+          - TARGET_UID=1001
+          - ODOO_ADMIN_PASSWD=strong_odoo_master_password
+          - ODOO_DB_USER=odoo
+          - ODOO_DB_PASSWORD=strong_pg_odoo_password
+        network_mode: bridge
+
+**Note:** For a more dynamic UID mapping, you can use Compose
+[variable substitution][dk-var]. Simply export the environment variable `UID`
+before starting the container and replace the `UID` with `$UID` in the
+`docker-compose.yml` file.
+
+  [dk-var]: https://docs.docker.com/compose/compose-file/#variable-substitution
 
 <a name="odoo_conf"></a>
 ## Odoo configuration file [^][toc]
@@ -302,9 +371,9 @@ configuration file.
 In the previous `docker-compose.yml` examples, the following Odoo parameters
 have already been defined:
 
-* `admin_passwd` (environment variable `ODOO_ADMIN_PASSWD`)
-* `db_user` (environment variable `ODOO_DB_USER`)
-* `db_password` (environment variable `ODOO_DB_PASSWORD`)
+* `admin_passwd`: environment variable `ODOO_ADMIN_PASSWD`
+* `db_user`: environment variable `ODOO_DB_USER`
+* `db_password`: environment variable `ODOO_DB_PASSWORD`
 
 For a complete list of Odoo parameters, see the [documentation][od-par].
 
@@ -324,8 +393,8 @@ ways are:
 ## Additionnal addons [^][toc]
 TODO
 
-<a name="aa_git_pull"></a>
-### Automatically pull Git repositories [^][toc]
+<a name="aa_git_fetch"></a>
+### Automatically fetch Git repositories [^][toc]
 
 Based on [`oca_dependencies.txt`][oca-dep]
 
@@ -336,6 +405,6 @@ TODO
 ### GitHub SSH authentication [^][toc]
 TODO
 
-<a name="customize_image"></a>
-## Customize this image [^][toc]
+<a name="extend_image"></a>
+## How to extend this image [^][toc]
 TODO

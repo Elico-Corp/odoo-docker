@@ -30,7 +30,6 @@ This image is a fork of [XCG Consulting][xcg] Odoo Docker image available
     - [Automatically fetch Git repositories](#git_fetch)
     - [Fetch multiple independent repositories](#fetch_multiple_repos)
     - [Fetch private GitHub repositories](#git_ssh)
-    - [Advanced `oca_dependencies.txt` syntax](#oca_dependencies)
 - [How to extend this image](#extend_image)
 
   [toc]: #toc "Table of Contents"
@@ -545,10 +544,6 @@ home folder, he can map his `.ssh` folder instead, e.g.:
 
     volumes:
       - ~/.ssh:/opt/odoo/ssh:ro
-
-<a name="oca_dependencies"></a>
-### Advanced `oca_dependencies.txt` syntax [^][toc]
-TODO
 
 <a name="extend_image"></a>
 ## How to extend this image [^][toc]

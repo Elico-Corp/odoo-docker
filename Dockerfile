@@ -1,5 +1,5 @@
 FROM ubuntu:14.04
-MAINTAINER Elico Corp <contact@elico-corp.com>
+MAINTAINER Elico Corp <webmaster@elico-corp.com>
 
 # Set timezone to UTC
 RUN ln -sf /usr/share/zoneinfo/Etc/UTC /etc/localtime

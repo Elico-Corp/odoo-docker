@@ -14,6 +14,12 @@ function help {
     set -e
 }
 
+function _ensure_odoo_user_owns_folder_if_exists {
+    if [ -d $1 ]; then
+        chown $odoo_user:$odoo_user $1
+    fi
+}
+
 function _update_odoo_conf_params {
     # Loop over all the "ODOO_" ENV variables (see `<<<` after `done`)
     while read -r env_var; do
@@ -93,18 +99,18 @@ function start {
     # them with root instead of the target Odoo user. Making sure to give back
     # the ownership to the corresponding host user.
     chown $odoo_user:$odoo_user /opt/odoo/{etc,additional_addons,data,var} \
-                                /opt/odoo/data/{filestore,sessions} \
                                 /opt/odoo/var/{run,log,egg-cache}
 
-    echo $log_src[`date +%F.%H:%M:%S`]' Searching for conf file...'
-    if [[ -z "$odoo_conf_file" ]]; then
-        odoo_conf_file="/opt/odoo/etc/odoo.conf"
-    fi
+    # The following folders might not exist
+    _ensure_odoo_user_owns_folder_if_exists /opt/odoo/data/filestore
+    _ensure_odoo_user_owns_folder_if_exists /opt/odoo/data/sessions
+    _ensure_odoo_user_owns_folder_if_exists /opt/odoo/data/addons
 
     echo $log_src[`date +%F.%H:%M:%S`]' Checking special requirements...'
     bash /opt/scripts/startup.sh
 
     echo $log_src[`date +%F.%H:%M:%S`]' Updating Odoo conf...'
+    odoo_conf_file="/opt/odoo/etc/odoo.conf"
     _update_odoo_conf_params
 
     # Check if need to download addons repo
@@ -116,7 +122,7 @@ function start {
         echo $log_src[`date +%F.%H:%M:%S`]' ...with additional args: ' $*
     fi
     sudo -i -u $odoo_user /usr/bin/python \
-                          /opt/odoo/sources/odoo/openerp-server \
+                          /opt/odoo/sources/odoo/$BINARY_NAME \
                           -c $odoo_conf_file \
                           $*
 

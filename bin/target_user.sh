@@ -23,7 +23,6 @@ if [ "$TARGET_UID" ]; then
 
         # Add target user to odoo group so that he can read/write the content
         # of /opt/odoo
-        echo $log_src[`date +%F.%H:%M:%S`]' Adding user to `odoo` group...'
         usermod -a -G odoo $odoo_user
     else
         # Target user already exists, make sure it's odoo

@@ -17,7 +17,7 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com \
 #     of PostgreSQL, ``9.5``.
 # install dependencies as distrib packages when system bindings are required
 # some of them extend the basic odoo requirements for a better "apps" compatibility
-# most dependencies are distributed as wheel packages at the next step
+# most dependencies are distributed as PIP packages at the next step
 RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main" > \
   /etc/apt/sources.list.d/pgdg.list && \
   apt-get update && \

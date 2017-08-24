@@ -3,7 +3,8 @@ MAINTAINER Elico Corp <webmaster@elico-corp.com>
 
 # Define build constants
 ENV ODOO_VERSION=10.0 \
-  PG_VERSION=9.5
+  PG_VERSION=9.5 \
+  BINARY_NAME=odoo-bin
 
 # Set timezone to UTC
 RUN ln -sf /usr/share/zoneinfo/Etc/UTC /etc/localtime

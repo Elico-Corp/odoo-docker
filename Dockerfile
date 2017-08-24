@@ -3,7 +3,6 @@ MAINTAINER Elico Corp <webmaster@elico-corp.com>
 
 # Define build constants
 ENV ODOO_VERSION=8.0 \
-  PG_VERSION=9.5
   PG_VERSION=9.5 \
   BINARY_NAME=openerp-server
 

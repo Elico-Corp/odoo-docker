@@ -649,9 +649,9 @@ This image is a fork of [XCG Consulting][xcg] Odoo Docker image available
 <a name="maintainer"></a>
 ### Maintainer[^][toc]
 
-![https://www.elico-corp.com][ec-logo]
+[![Elico Corp][ec-logo]][ec]
 
-  [ec-logo]: https://www.elico-corp.com/logo.png "Elico Corp"
+  [ec-logo]: https://www.elico-corp.com/logo.png
 
 This project is maintained by Elico Corporation.
 

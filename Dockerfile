@@ -119,7 +119,7 @@ VOLUME [ \
 ADD README.md /usr/share/man/man.txt
 # Remove anchors and links to anchors to improve readability
 RUN sed -i '/^<a name="/ d' /usr/share/man/man.txt
-RUN sed -i -e 's/ \[\^\]\[toc\]//g' /usr/share/man/man.txt
+RUN sed -i -e 's/\[\^\]\[toc\]//g' /usr/share/man/man.txt
 RUN sed -i -e 's/\(\[.*\]\)(#.*)/\1/g' /usr/share/man/man.txt
 # For help command, only keep the "Usage" section
 RUN from=$( awk '/^## Usage/{ print NR; exit }' /usr/share/man/man.txt ) && \

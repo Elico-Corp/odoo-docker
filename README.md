@@ -1,17 +1,11 @@
 # elicocorp/odoo
 Simple yet powerful [Odoo][odoo] image for [Docker][dk] based on [OCB][ocb]
-code and maintained by [Elico Corp][ec].
+code and maintained by [Elico Corporation][ec].
 
   [odoo]: https://www.odoo.com/
   [dk]: https://www.docker.com/
   [ocb]: https://github.com/OCA/OCB "Odoo Community Backports"
   [ec]: https://www.elico-corp.com/
-
-This image is a fork of [XCG Consulting][xcg] Odoo Docker image available
-[here][xcgd].
-
-  [xcg]: https://www.xcg-consulting.fr/
-  [xcgd]: https://hub.docker.com/r/xcgd/odoo/
 
 <a name="toc"></a>
 ## Table of Contents
@@ -33,11 +27,15 @@ This image is a fork of [XCG Consulting][xcg] Odoo Docker image available
 - [Run a bash script at startup](#startup_script)
 - [How to extend this image](#extend_image)
 - [Roadmap](#roadmap)
+- [Bug Tracker](#bug_tracker)
+- [Credits](#credits)
+    - [Contributors](#contributors)
+    - [Maintainer](#maintainer)
 
   [toc]: #toc "Table of Contents"
 
 <a name="usage"></a>
-## Usage [^][toc]
+## Usage[^][toc]
 In order to use this image, a recent version of Docker must be installed on the
 host. For more information about Docker Engine, see the
 [official documentation][dk-doc].
@@ -45,7 +43,7 @@ host. For more information about Docker Engine, see the
   [dk-doc]: https://docs.docker.com/engine/
 
 <a name="run_image"></a>
-### Run the image [^][toc]
+### Run the image[^][toc]
 Running this image without specifying any command will display this help
 message:
 
@@ -71,7 +69,7 @@ image. By default, Odoo is configured to connect with a PostgreSQL host named
   [ec-pg]: https://hub.docker.com/r/elicocorp/postgres/
 
 <a name="compose_example"></a>
-### Compose example [^][toc]
+### Compose example[^][toc]
 Below is an example of a simple `docker-compose.yml` to use this image. For
 more information about Compose, see the [official documentation][dc-doc].
 
@@ -127,7 +125,7 @@ See [Security](#security) section for more info.
 See [Data persistency](#data_persistency) section for more info.
 
 <a name="security"></a>
-## Security [^][toc]
+## Security[^][toc]
 In order to improve the security, it is recommended to:
 
 1. set a master password for Odoo using `ODOO_ADMIN_PASSWD`
@@ -175,7 +173,7 @@ outside). For instance:
           - 127.0.0.1:12345:8069
 
 <a name="data_persistency"></a>
-## Data persistency [^][toc]
+## Data persistency[^][toc]
 As soon as the containers are removed, all the modifications (e.g. database,
 attachments, etc.) will be lost. There are 2 main [volumes][dk-vol] that must
 be made persistent in order to preserve the data:
@@ -231,10 +229,10 @@ belong to the user whose UID matches the user running inside the container.
 See Host user mapping section for more info.
 
 <a name="host_user_mapping"></a>
-## Host user mapping [^][toc]
+## Host user mapping[^][toc]
 
 <a name="default_hum"></a>
-### Default host user mapping in Docker [^][toc]
+### Default host user mapping in Docker[^][toc]
 Each Docker image defines its own [users][dk-user]. Users only exist inside the
 running container.
 
@@ -265,7 +263,7 @@ user inside the container will actually be executed by the anonymous host user
 with UID `999`.
 
 <a name="hum_and_volumes"></a>
-### Host user mapping and volumes [^][toc]
+### Host user mapping and volumes[^][toc]
 When the user inside the container owns files that belong to a volume, the
 corresponding files in the folder mapped to the volume on the host will
 actually belong to the corresponding user on the host.
@@ -280,7 +278,7 @@ folder `/var/lib/postgresql/data` will be stored on the host in the folder
 `./volumes/postgres` and belong to the anonymous host user with UID `999`
 
 <a name="impact"></a>
-### Impact [^][toc]
+### Impact[^][toc]
 When having `root` privileges on the host, the default host user mapping
 behavior is usually not a big issue. The main impact is that the files mapped
 with a volume might belong to users that don't have anything to do with the
@@ -313,7 +311,7 @@ where a user would require the system administrator to help him delete files
 under his own home folder.
 
 <a name="solution"></a>
-### Solution [^][toc]
+### Solution[^][toc]
 Each Docker image has its own way to deal with host user mapping:
 
 * for PostgreSQL, see the [official documentation][pg] (section "Arbitrary
@@ -370,7 +368,7 @@ before starting the container and replace the `UID` with `$UID` in the
   [dk-var]: https://docs.docker.com/compose/compose-file/#variable-substitution
 
 <a name="odoo_conf"></a>
-## Odoo configuration file [^][toc]
+## Odoo configuration file[^][toc]
 The configuration file is generated automatically at startup. Any available
 Odoo parameter can be provided as an environment variable, prefixed by `ODOO_`.
 
@@ -400,7 +398,7 @@ ways are:
          "Dockerfile reference | Docker Documentation"
 
 <a name="additional_addons"></a>
-## Additional Odoo modules [^][toc]
+## Additional Odoo modules[^][toc]
 This image allows to load additional Odoo modules through the volume
 `/opt/odoo/additional_addons`. When adding modules manually in that folder, the
 Odoo parameter `addons_path` must be defined accordingly:
@@ -412,7 +410,7 @@ root of the folder `/opt/odoo/additional_addons`. Depending on the folder
 structure, the parameter might need to be adapted.
 
 <a name="git_fetch"></a>
-### Automatically fetch Git repositories [^][toc]
+### Automatically fetch Git repositories[^][toc]
 
 This image is able to automatically fetch (e.g. `git clone`) a [Git][git]
 repository containing a set of modules. It is based on the
@@ -489,7 +487,7 @@ environment variable `FETCH_OCA_DEPENDENCIES` to `False` (default value is
       - FETCH_OCA_DEPENDENCIES=False
 
 <a name="fetch_multiple_repos"></a>
-### Fetch multiple independent repositories [^][toc]
+### Fetch multiple independent repositories[^][toc]
 It might be necessary to fetch more than one Git repository (and the
 repositories it depends on). In that case, instead of using the `ADDONS_REPO`
 environment variable, simply create one `oca_dependencies.txt` file and put it
@@ -508,7 +506,7 @@ OCA project repository, put the following `oca_dependencies.txt` in the
     account-payment https://github.com/OCA/account-payment.git
 
 <a name="git_ssh"></a>
-### Fetch private GitHub repositories [^][toc]
+### Fetch private GitHub repositories[^][toc]
 This image is able to pull multiple private GitHub repositories when provided a
 valid SSH key that has read access to these repositories. The URL for GitHub
 SSH authentication is available under the "Clone with SSH" option.
@@ -562,7 +560,7 @@ home folder, he can map his `.ssh` folder instead, e.g.:
       - ~/.ssh:/opt/odoo/ssh:ro
 
 <a name="startup_script"></a>
-## Run a bash script at startup [^][toc]
+## Run a bash script at startup[^][toc]
 In some cases, it might be useful to run some commands in the container before
 starting Odoo. After the Odoo target user has been created, the container will
 execute a [bash][bash] script with the container user `root`.
@@ -573,7 +571,7 @@ The script is located at `/opt/scripts/startup.sh` and can be mapped with a
 volume or added via a `Dockerfile`.
 
 <a name="extend_image"></a>
-## How to extend this image [^][toc]
+## How to extend this image[^][toc]
 This image comes with all the dependencies required to run the standard version
 of Odoo. However, some additionnal modules might require an extra setup.
 
@@ -616,10 +614,61 @@ image [localized for China][odoo-china].
   [odoo-china]: https://github.com/Elico-Corp/odoo-docker-china
 
 <a name="roadmap"></a>
-## Roadmap [^][toc]
+## Roadmap[^][toc]
 
 * Current list of PIP requirements is maintenained in this repository. It
 should use the `https://github.com/OCA/OCB/blob/10.0/requirements.txt` instead.
 To be noted that this file is not available in v7.
 * Use the standard Odoo code rather than the OCB
 * Use the code of `maintainer-quality-tools` to pull the `oca_dependencies.txt`
+
+<a name="bug_tracker"></a>
+## Bug Tracker[^][toc]
+Bugs are tracked on [GitHub Issues][gh-issues]. In case of trouble, please
+check there if your issue has already been reported. If you spotted it first,
+help us smash it by providing detailed and welcomed feedback.
+
+  [gh-issues]: https://github.com/Elico-Corp/elico_odoo/issues
+
+<a name="credits"></a>
+## Credits[^][toc]
+
+<a name="contributors"></a>
+### Contributors[^][toc]
+
+* Sebastien Maillard <sebastien.maillard@elico-corp.com>
+* Eric Caudal <eric.caudal@elico-corp.com>
+* Noah Wang <noah.wang@elico-corp.com>
+
+This image is a fork of [XCG Consulting][xcg] Odoo Docker image available
+[here][xcgd].
+
+  [xcg]: https://www.xcg-consulting.fr/
+  [xcgd]: https://hub.docker.com/r/xcgd/odoo/
+
+<a name="maintainer"></a>
+### Maintainer[^][toc]
+
+[![Elico Corp][ec-logo]][ec]
+
+  [ec-logo]: https://www.elico-corp.com/logo.png
+
+This project is maintained by Elico Corporation.
+
+Elico Corp is an innovative actor in China, Hong-Kong and Singapore servicing
+well known international companies and as well as local mid-sized businesses.
+Since 2010, our seasoned Sino-European consultants have been providing full
+range Odoo services:
+
+* Business consultancy for Gap analysis, BPM, operational work-flows review. 
+* Ready-to-use ERP packages aimed at starting businesses.
+* Odoo implementation for manufacturing, international trading, service industry
+  and e-commerce. 
+* Connectors and integration with 3rd party software (Magento, Taobao, Coswin,
+  Joomla, Prestashop, Tradevine etc...).
+* Odoo Support services such as developments, training, maintenance and hosting.
+
+Our headquarters are located in Shanghai with branch in Singapore servicing
+customers from all over Asia Pacific.
+
+Contact information: Sales <contact@elico-corp.com>

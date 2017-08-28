@@ -390,10 +390,11 @@ For a complete list of Odoo parameters, see the [documentation][od-par].
 It is also possible to use a custom Odoo configuration file. The most common
 ways are:
 
-1. `ADD` the configuration file in `/opt/odoo/etc/odoo.conf` using a
+1. [`ADD`][dk-add] the configuration file in `/opt/odoo/etc/odoo.conf` using a
 [`Dockerfile`][dkf]
 2. Map the `/opt/odoo/etc/odoo.conf` using a volume
 
+  [dk-add]: https://docs.docker.com/engine/reference/builder/#add
   [dkf]: https://docs.docker.com/engine/reference/builder/
          "Dockerfile reference | Docker Documentation"
 
@@ -415,7 +416,7 @@ structure, the parameter might need to be adapted.
 This image is able to automatically fetch (e.g. `git clone`) a [Git][git]
 repository containing a set of modules. It is based on the
 [cross repository dependency management][cross-repo-dep] system introduced by
-the [OCA][oca]. For more information about the
+the [OCA][oca].
 
   [git]: https://git-scm.com
   [cross-repo-dep]: https://github.com/OCA/maintainer-quality-tools/pull/159

@@ -10,88 +10,129 @@ log_src='['${0##*/}']'
 
 function help {
     set +e
-    cat bin/help.txt
+    cat /usr/share/man/help.txt
     set -e
 }
 
-function login  {
-    echo $log_src[`date +%F.%H:%M:%S`]' Running bash'
+function man {
     set +e
-    if [[ ! -e $1 && $1 = "root" ]]; then
-        /bin/bash
-    else
-        sudo su - odoo
-    fi
-    SERVICE_PID=$!
+    cat /usr/share/man/man.txt
     set -e
 }
 
-function _update_odoo_conf_param {
-    if [ "$2" ]; then
-        echo $log_src[`date +%F.%H:%M:%S`]' Replacing parameter '$1
-        sudo -i -u \#$TARGET_ID sed -i "s/$1/$2/g" $odoo_conf_file
+function _ensure_odoo_user_owns_folder_if_exists {
+    if [ -d $1 ]; then
+        chown $odoo_user:$odoo_user $1
     fi
 }
 
-function start {
-    echo $log_src[`date +%F.%H:%M:%S`]' Checking special requirements...'
-    bash /opt/scripts/startup.sh
+function _update_odoo_conf_params {
+    # Loop over all the "ODOO_" ENV variables (see `<<<` after `done`)
+    while read -r env_var; do
+        # Remove "ODOO_" from ENV variable and convert to lowercase
+        odoo_param=${env_var:5}
+        odoo_param=${odoo_param,,}
 
-    echo $log_src[`date +%F.%H:%M:%S`]' Updating Odoo conf...'
-    _update_odoo_conf_param '_ADMIN_PASSWORD_' $ADMIN_PASSWORD
-    _update_odoo_conf_param '_DB_USER_' $DB_USER
-    _update_odoo_conf_param '_DB_PASSWORD_' $DB_PASSWORD
-    _update_odoo_conf_param '_DB_FILTER_' $DB_FILTER
-    echo $log_src[`date +%F.%H:%M:%S`]' Update Odoo conf done'
+        # Get the value of the corresponding ENV variable and escape slashes
+        val=${!env_var}
+        val=$( echo $val | sed 's/\//\\\//g')
 
-    echo $log_src[`date +%F.%H:%M:%S`]' Check if need to download addons repo...'
+        # FIXME Should not be an external script (see reason in script header)
+        bash /app/bin/update_odoo_param.sh $odoo_user $odoo_conf_file $odoo_param $val
+
+        # Unset the environment variable for security purpose
+        unset $env_var
+    done <<< "$( printenv | grep '^ODOO_' | sed 's/=.*//g' )"
+}
+
+function _setup_ssh_key {
+    # Create SSH config folder in $HOME folder of Odoo target user
+    ssh_folder=$( getent passwd $odoo_user | cut -d: -f6 )/.ssh
+    sudo -i -u $odoo_user mkdir $ssh_folder
+
+    # Copy SSH private key from /opt/odoo/ssh
+    sudo -i -u $odoo_user cp /opt/odoo/ssh/id_rsa $ssh_folder
+
+    echo $log_src[`date +%F.%H:%M:%S`]' Scanning GitHub key...'
+    # Hide ssh-keyscan stderr output since it's actually log message
+    ssh-keyscan github.com 2> /dev/null | \
+        sudo -i -u $odoo_user tee $ssh_folder/known_hosts > /dev/null
+
+    # Bind SSH key to GitHub host
+    echo "host github.com
+            HostName github.com
+            User git
+            IdentityFile $ssh_folder/id_rsa" | \
+        sudo -i -u $odoo_user tee $ssh_folder/config > /dev/null
+
+    # Secure SSH key
+    chmod 400 $ssh_folder/id_rsa
+}
+
+function _download_addons {
+    # 2 reasons to download extra addons:
+    #  1) ENV variable ADDONS_REPO is defined
+    #  2) There's a file called `oca_dependencies.txt` at the root of extra addons folder
     if [ "$ADDONS_REPO" -o -a /opt/odoo/additional_addons/oca_dependencies.txt ]; then
-        echo $log_src[`date +%F.%H:%M:%S`]' Git config for target user'
-        sudo -i -u \#$TARGET_ID git config --global user.email "contact@elico-corp.com"
-        sudo -i -u \#$TARGET_ID git config --global user.name "Elico Corp - Odoo Docker"
+        # Git config for target user
+        sudo -i -u $odoo_user git config --global user.email "webmaster@elico-corp.com"
+        sudo -i -u $odoo_user git config --global user.name "Elico Corp - Odoo Docker"
 
-        echo $log_src[`date +%F.%H:%M:%S`]' Checking if need to setup SSH key...'
+        # Setup SSH key
         if [ -a /opt/odoo/ssh/id_rsa ]; then
-            echo $log_src[`date +%F.%H:%M:%S`]' Setting up SSH key...'
-            SSH_FOLDER=$( getent passwd $TARGET_ID | cut -d: -f6 )/.ssh
-            echo $log_src[`date +%F.%H:%M:%S`]' Creating SSH folder = '$SSH_FOLDER
-            mkdir $SSH_FOLDER
-            echo $log_src[`date +%F.%H:%M:%S`]' Copy SSH private key from /opt/odoo/ssh'
-            cp /opt/odoo/ssh/id_rsa $SSH_FOLDER
-            echo $log_src[`date +%F.%H:%M:%S`]' Scanning GitHub key...'
-            ssh-keyscan github.com > $SSH_FOLDER/known_hosts
-            echo $log_src[`date +%F.%H:%M:%S`]' Setup SSH config...'
-            echo "host github.com" > $SSH_FOLDER/config
-            echo "    HostName github.com" >> $SSH_FOLDER/config
-            echo "    User git" >> $SSH_FOLDER/config
-            echo "    IdentityFile $SSH_FOLDER/id_rsa" >> $SSH_FOLDER/config
-            echo $log_src[`date +%F.%H:%M:%S`]' Securing SSH folder...'
-            chown -R $TARGET_ID:$TARGET_ID $SSH_FOLDER
-            chmod 400 $SSH_FOLDER/id_rsa
-            echo $log_src[`date +%F.%H:%M:%S`]' Setup SSH key done'
+            _setup_ssh_key
         fi
 
+        # Always fetch dependencies unless specified
         if [[ -z "$FETCH_OCA_DEPENDENCIES" ]]; then
-            echo $log_src[`date +%F.%H:%M:%S`]' Fetch dependencies undefined, set to True'
             FETCH_OCA_DEPENDENCIES=True
         fi
 
         echo $log_src[`date +%F.%H:%M:%S`]' Downloading additional addons...'
-        sudo -i -u \#$TARGET_ID python /opt/odoo/auto_addons/addons.py $FETCH_OCA_DEPENDENCIES $ADDONS_REPO
+        sudo -i -u $odoo_user python /opt/odoo/auto_addons/addons.py $FETCH_OCA_DEPENDENCIES $ADDONS_REPO
     else
-        echo $log_src[`date +%F.%H:%M:%S`]' No additional addons to download'
-        sudo -i -u \#$TARGET_ID bash /opt/odoo/auto_addons/no_addons.sh $odoo_conf_file
+        # No additional addons to download
+        sudo -i -u $odoo_user bash /opt/odoo/auto_addons/no_addons.sh $odoo_conf_file
     fi
+}
+
+function start {
+    echo $log_src[`date +%F.%H:%M:%S`]' Searching for target Odoo user...'
+    # FIXME Should not be an external script (see reason in script header)
+    bash /app/bin/target_user.sh
+    odoo_user=$( cat /tmp/odoo_user )
+    rm -f /tmp/odoo_user
+
+    # If the folders mapped to the volumes didn't exist, Docker has created
+    # them with root instead of the target Odoo user. Making sure to give back
+    # the ownership to the corresponding host user.
+    chown $odoo_user:$odoo_user /opt/odoo/{etc,additional_addons,data,var} \
+                                /opt/odoo/var/{run,log,egg-cache}
+
+    # The following folders might not exist
+    _ensure_odoo_user_owns_folder_if_exists /opt/odoo/data/filestore
+    _ensure_odoo_user_owns_folder_if_exists /opt/odoo/data/sessions
+    _ensure_odoo_user_owns_folder_if_exists /opt/odoo/data/addons
+
+    echo $log_src[`date +%F.%H:%M:%S`]' Checking special requirements...'
+    bash /opt/scripts/startup.sh
+
+    echo $log_src[`date +%F.%H:%M:%S`]' Updating Odoo conf...'
+    odoo_conf_file="/opt/odoo/etc/odoo.conf"
+    _update_odoo_conf_params
+
+    # Check if need to download addons repo
+    _download_addons
 
     echo $log_src[`date +%F.%H:%M:%S`]' Running odoo...'
     set +e
     if [ ! -e $1 ]; then
-        echo $log_src[`date +%F.%H:%M:%S`]' ...with additional args: $*'
+        echo $log_src[`date +%F.%H:%M:%S`]' ...with additional args: ' $*
     fi
-    sudo -i -u \#$TARGET_ID /usr/bin/python \
-                    /opt/odoo/sources/odoo/openerp-server \
-                    -c $odoo_conf_file \
-                    $*
+    sudo -i -u $odoo_user /usr/bin/python \
+                          /opt/odoo/sources/odoo/$BINARY_NAME \
+                          -c $odoo_conf_file \
+                          $*
 
     SERVICE_PID=$!
     set -e
@@ -100,23 +141,10 @@ function start {
 # smart shutdown on SIGINT and SIGTERM
 function on_exit() {
     kill -TERM $SERVICE_PID
-    wait $SERVICE_PID 2>/dev/null
+    wait $SERVICE_PID 2> /dev/null
     exit 0
 }
 trap on_exit INT TERM
-
-echo $log_src[`date +%F.%H:%M:%S`]' Search for target user...'
-bash /opt/sources/target_user.sh
-
-if [[ -z "$TARGET_ID" ]]; then
-    echo $log_src[`date +%F.%H:%M:%S`]' No target user, falling back to odoo'
-    TARGET_ID=$( id -u odoo )
-fi
-
-echo $log_src[`date +%F.%H:%M:%S`]' Search conf file...'
-if [[ -z "$odoo_conf_file" ]]; then
-    odoo_conf_file="/opt/odoo/etc/odoo.conf"
-fi
 
 echo $log_src[`date +%F.%H:%M:%S`]' Running command...'
 for arg in "$*"

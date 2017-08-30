@@ -9,7 +9,14 @@
 #
 log_src='['${0##*/}']'
 
-grep -P "^addons_path\s*=" $1
-if [ $? -ne 0 ]; then
-    echo "addons_path = /opt/odoo/sources/odoo/addons" >> $1
+odoo_user="$1"
+odoo_conf_file="$2"
+
+grep -q '^addons_path\s*=' "$odoo_conf_file"
+found="$?"
+
+if [ "$found" -ne 0 ]; then
+    # Append the parameter (hide tee output to stdout)
+    echo 'addons_path = /opt/odoo/sources/odoo/addons' | \
+        sudo -i -u "$odoo_user" tee -a "$odoo_conf_file" > /dev/null
 fi

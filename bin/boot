@@ -20,10 +20,29 @@ function man {
     set -e
 }
 
-function _ensure_odoo_user_owns_folder_if_exists {
+function _ensure_odoo_user_owns_volume {
+    # Make sure the folder exists
     if [ -d $1 ]; then
-        chown $odoo_user:$odoo_user $1
+        # Check if the volume has been mounted read-only
+        mount_type=$( cat /proc/mounts | grep "\s$1\s" | \
+            awk '{print tolower(substr($4,0,3))}' )
+
+        if [ $mount_type != "ro" ]; then
+            chown $odoo_user:$odoo_user $1
+        else
+            echo $log_src[`date +%F.%H:%M:%S`]' Read-only volume:' $1
+        fi
     fi
+}
+
+function _ensure_odoo_user_owns_volumes {
+    _ensure_odoo_user_owns_volume /opt/odoo/etc
+    _ensure_odoo_user_owns_volume /opt/odoo/additional_addons
+    _ensure_odoo_user_owns_volume /opt/odoo/data
+    _ensure_odoo_user_owns_volume /opt/odoo/data/filestore
+    _ensure_odoo_user_owns_volume /opt/odoo/data/sessions
+    _ensure_odoo_user_owns_volume /opt/odoo/data/addons
+    _ensure_odoo_user_owns_volume /opt/odoo/ssh
 }
 
 function _update_odoo_conf_params {
@@ -106,13 +125,7 @@ function start {
     # If the folders mapped to the volumes didn't exist, Docker has created
     # them with root instead of the target Odoo user. Making sure to give back
     # the ownership to the corresponding host user.
-    chown $odoo_user:$odoo_user /opt/odoo/{etc,additional_addons,data,var} \
-                                /opt/odoo/var/{run,log,egg-cache}
-
-    # The following folders might not exist
-    _ensure_odoo_user_owns_folder_if_exists /opt/odoo/data/filestore
-    _ensure_odoo_user_owns_folder_if_exists /opt/odoo/data/sessions
-    _ensure_odoo_user_owns_folder_if_exists /opt/odoo/data/addons
+    _ensure_odoo_user_owns_volumes
 
     echo $log_src[`date +%F.%H:%M:%S`]' Checking special requirements...'
     bash /opt/scripts/startup.sh
@@ -127,7 +140,7 @@ function start {
     echo $log_src[`date +%F.%H:%M:%S`]' Running odoo...'
     set +e
     if [ ! -e $1 ]; then
-        echo $log_src[`date +%F.%H:%M:%S`]' ...with additional args: ' $*
+        echo $log_src[`date +%F.%H:%M:%S`]' ...with additional args:' $*
     fi
     sudo -i -u $odoo_user /usr/bin/python \
                           /opt/odoo/sources/odoo/$BINARY_NAME \

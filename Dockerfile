@@ -2,7 +2,7 @@ FROM ubuntu:14.04
 MAINTAINER Elico Corp <webmaster@elico-corp.com>
 
 # Define build constants
-ENV ODOO_VERSION=8.0 \
+ENV GIT_BRANCH=8.0 \
   PG_VERSION=9.5 \
   BINARY_NAME=openerp-server
 
@@ -92,7 +92,7 @@ RUN /bin/bash -c "mkdir -p /opt/odoo/{etc,sources/odoo,additional_addons,data,ss
 
 # Add Odoo OCB sources and remove .git folder in order to reduce image size
 WORKDIR /opt/odoo/sources
-RUN git clone https://github.com/OCA/OCB.git -b $ODOO_VERSION odoo && \
+RUN git clone https://github.com/OCA/OCB.git -b $GIT_BRANCH odoo && \
   rm -rf odoo/.git
 
 ADD sources/odoo.conf /opt/odoo/etc/odoo.conf

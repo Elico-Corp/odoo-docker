@@ -116,7 +116,7 @@ VOLUME [ \
 # Use README for the help & man commands
 ADD README.md /usr/share/man/man.txt
 # Remove anchors and links to anchors to improve readability
-RUN sed -i '/^<a name="/ d' /usr/share/man/man.txt
+RUN sed -i '/^<a name=/ d' /usr/share/man/man.txt
 RUN sed -i -e 's/\[\^\]\[toc\]//g' /usr/share/man/man.txt
 RUN sed -i -e 's/\(\[.*\]\)(#.*)/\1/g' /usr/share/man/man.txt
 # For help command, only keep the "Usage" section
@@ -127,9 +127,12 @@ RUN from=$( awk '/^## Usage/{ print NR; exit }' /usr/share/man/man.txt ) && \
   tail -n +$from | \
   tee /usr/share/man/help.txt > /dev/null
 
-# Set the default entrypoint (non overridable) to run when starting the container
-ADD bin /app/bin/
-ENTRYPOINT [ "/app/bin/boot" ]
+# Use dumb-init as init system to launch the boot script
+ADD https://github.com/Yelp/dumb-init/releases/download/v1.2.0/dumb-init_1.2.0_amd64.deb /opt/sources/dumb-init.deb
+RUN dpkg -i /opt/sources/dumb-init.deb
+ADD boot /usr/bin/boot
+RUN chmod +x /usr/bin/boot
+ENTRYPOINT [ "/usr/bin/dumb-init", "/usr/bin/boot" ]
 CMD [ "help" ]
 
 # Expose the odoo ports (for linked containers)

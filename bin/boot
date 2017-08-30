@@ -22,15 +22,16 @@ function man {
 
 function _ensure_odoo_user_owns_volume {
     # Make sure the folder exists
-    if [ -d $1 ]; then
+    if [ -d "$1" ]; then
         # Check if the volume has been mounted read-only
         mount_type=$( cat /proc/mounts | grep "\s$1\s" | \
             awk '{print tolower(substr($4,0,3))}' )
 
-        if [ $mount_type != "ro" ]; then
-            chown $odoo_user:$odoo_user $1
+        if [ "$mount_type" != 'ro' ]; then
+            # Set target user as owner
+            chown "$odoo_user":"$odoo_user" "$1"
         else
-            echo $log_src[`date +%F.%H:%M:%S`]' Read-only volume:' $1
+            echo $log_src[`date +%F.%H:%M:%S`]' Read-only volume:' "$1"
         fi
     fi
 }
@@ -54,38 +55,39 @@ function _update_odoo_conf_params {
 
         # Get the value of the corresponding ENV variable and escape slashes
         val=${!env_var}
-        val=$( echo $val | sed 's/\//\\\//g')
+        val=$( echo "$val" | sed 's/\//\\\//g')
 
         # FIXME Should not be an external script (see reason in script header)
-        bash /app/bin/update_odoo_param.sh $odoo_user $odoo_conf_file $odoo_param $val
+        bash /app/bin/update_odoo_param.sh "$odoo_user" "$odoo_conf_file" \
+            "$odoo_param" "$val"
 
         # Unset the environment variable for security purpose
-        unset $env_var
+        unset "$env_var"
     done <<< "$( printenv | grep '^ODOO_' | sed 's/=.*//g' )"
 }
 
 function _setup_ssh_key {
     # Create SSH config folder in $HOME folder of Odoo target user
-    ssh_folder=$( getent passwd $odoo_user | cut -d: -f6 )/.ssh
-    sudo -i -u $odoo_user mkdir $ssh_folder
+    ssh_folder=$( getent passwd "$odoo_user" | cut -d: -f6 )/.ssh
+    sudo -i -u "$odoo_user" mkdir "$ssh_folder"
 
     # Copy SSH private key from /opt/odoo/ssh
-    sudo -i -u $odoo_user cp /opt/odoo/ssh/id_rsa $ssh_folder
+    sudo -i -u "$odoo_user" cp /opt/odoo/ssh/id_rsa "$ssh_folder"
 
     echo $log_src[`date +%F.%H:%M:%S`]' Scanning GitHub key...'
     # Hide ssh-keyscan stderr output since it's actually log message
     ssh-keyscan github.com 2> /dev/null | \
-        sudo -i -u $odoo_user tee $ssh_folder/known_hosts > /dev/null
+        sudo -i -u "$odoo_user" tee "$ssh_folder/known_hosts" > /dev/null
 
     # Bind SSH key to GitHub host
     echo "host github.com
             HostName github.com
             User git
             IdentityFile $ssh_folder/id_rsa" | \
-        sudo -i -u $odoo_user tee $ssh_folder/config > /dev/null
+        sudo -i -u "$odoo_user" tee "$ssh_folder/config" > /dev/null
 
     # Secure SSH key
-    chmod 400 $ssh_folder/id_rsa
+    chmod 400 "$ssh_folder/id_rsa"
 }
 
 function _download_addons {
@@ -94,8 +96,8 @@ function _download_addons {
     #  2) There's a file called `oca_dependencies.txt` at the root of extra addons folder
     if [ "$ADDONS_REPO" -o -a /opt/odoo/additional_addons/oca_dependencies.txt ]; then
         # Git config for target user
-        sudo -i -u $odoo_user git config --global user.email "webmaster@elico-corp.com"
-        sudo -i -u $odoo_user git config --global user.name "Elico Corp - Odoo Docker"
+        sudo -i -u "$odoo_user" git config --global user.email "webmaster@elico-corp.com"
+        sudo -i -u "$odoo_user" git config --global user.name "Elico Corp - Odoo Docker"
 
         # Setup SSH key
         if [ -a /opt/odoo/ssh/id_rsa ]; then
@@ -108,10 +110,12 @@ function _download_addons {
         fi
 
         echo $log_src[`date +%F.%H:%M:%S`]' Downloading additional addons...'
-        sudo -i -u $odoo_user python /opt/odoo/auto_addons/addons.py $FETCH_OCA_DEPENDENCIES $ADDONS_REPO
+        sudo -i -u "$odoo_user" python /opt/odoo/auto_addons/addons.py \
+            "$FETCH_OCA_DEPENDENCIES" "$ADDONS_REPO"
     else
         # No additional addons to download
-        sudo -i -u $odoo_user bash /opt/odoo/auto_addons/no_addons.sh $odoo_conf_file
+        # FIXME Should not be an external script (see reason in script header)
+        bash /app/bin/no_addons.sh "$odoo_user" "$odoo_conf_file"
     fi
 }
 
@@ -139,22 +143,22 @@ function start {
 
     echo $log_src[`date +%F.%H:%M:%S`]' Running odoo...'
     set +e
-    if [ ! -e $1 ]; then
-        echo $log_src[`date +%F.%H:%M:%S`]' ...with additional args:' $*
+    if [ ! -e "$1" ]; then
+        echo $log_src[`date +%F.%H:%M:%S`]' ...with additional args:' "$*"
     fi
-    sudo -i -u $odoo_user /usr/bin/python \
-                          /opt/odoo/sources/odoo/$BINARY_NAME \
-                          -c $odoo_conf_file \
-                          $*
+    sudo -i -u "$odoo_user" /usr/bin/python \
+                            "/opt/odoo/sources/odoo/$BINARY_NAME" \
+                            -c "$odoo_conf_file" \
+                            $*
 
-    SERVICE_PID=$!
+    SERVICE_PID="$!"
     set -e
 }
 
 # smart shutdown on SIGINT and SIGTERM
 function on_exit() {
-    kill -TERM $SERVICE_PID
-    wait $SERVICE_PID 2> /dev/null
+    kill -TERM "$SERVICE_PID"
+    wait "$SERVICE_PID" 2> /dev/null
     exit 0
 }
 trap on_exit INT TERM
@@ -162,6 +166,7 @@ trap on_exit INT TERM
 echo $log_src[`date +%F.%H:%M:%S`]' Running command...'
 for arg in "$*"
 do
+    # Not protected with `"` in order to pass the arguments
     $arg
 done
 

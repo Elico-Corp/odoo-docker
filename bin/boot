@@ -1,23 +1,15 @@
 #!/bin/bash
 #
 # This script is designed to be run inside the container
-#
-
-# fail hard and fast even on pipelines
-set -eo pipefail
 
 log_src='['${0##*/}']'
 
 function help {
-    set +e
     cat /usr/share/man/help.txt
-    set -e
 }
 
 function man {
-    set +e
     cat /usr/share/man/man.txt
-    set -e
 }
 
 function _ensure_odoo_user_owns_volume {
@@ -46,6 +38,22 @@ function _ensure_odoo_user_owns_volumes {
     _ensure_odoo_user_owns_volume /opt/odoo/ssh
 }
 
+function _update_odoo_param {
+    # Check if the conf already contains that parameter
+    grep -q "^$1\s*=" "$odoo_conf_file"
+    found="$?"
+
+    if [ "$found" -eq 0 ]; then
+        # Substitute the value
+        sudo -i -u "$odoo_user" sed -i \
+            "s/^$1\s*=.*/$1 = $2/g" "$odoo_conf_file"
+    else
+        # Append the parameter (hide tee output to stdout)
+        echo "$1 = $2" | \
+            sudo -i -u "$odoo_user" tee -a "$odoo_conf_file" > /dev/null
+    fi
+}
+
 function _update_odoo_conf_params {
     # Loop over all the "ODOO_" ENV variables (see `<<<` after `done`)
     while read -r env_var; do
@@ -55,11 +63,9 @@ function _update_odoo_conf_params {
 
         # Get the value of the corresponding ENV variable and escape slashes
         val=${!env_var}
-        val=$( echo "$val" | sed 's/\//\\\//g')
+        val=$( echo "$val" | sed 's/\//\\\//g' )
 
-        # FIXME Should not be an external script (see reason in script header)
-        bash /app/bin/update_odoo_param.sh "$odoo_user" "$odoo_conf_file" \
-            "$odoo_param" "$val"
+        _update_odoo_param "$odoo_param" "$val"
 
         # Unset the environment variable for security purpose
         unset "$env_var"
@@ -114,17 +120,58 @@ function _download_addons {
             "$FETCH_OCA_DEPENDENCIES" "$ADDONS_REPO"
     else
         # No additional addons to download
-        # FIXME Should not be an external script (see reason in script header)
-        bash /app/bin/no_addons.sh "$odoo_user" "$odoo_conf_file"
+        grep -q '^addons_path\s*=' "$odoo_conf_file"
+        found="$?"
+
+        if [ "$found" -ne 0 ]; then
+            # Set addons path if it doesn't exist
+            echo 'addons_path = /opt/odoo/sources/odoo/addons' | \
+                sudo -i -u "$odoo_user" tee -a "$odoo_conf_file" > /dev/null
+        fi
+    fi
+}
+
+function _host_user_mapping {
+    # Name of the target Odoo user
+    TARGET_USER_NAME='target-odoo-user'
+
+    # Check whether target user exists or not
+    exists=$( getent passwd "$TARGET_UID" | wc -l )
+
+    # Create target user
+    if [ "$exists" == "0" ]; then
+        echo $log_src[`date +%F.%H:%M:%S`]' Creating target Odoo user...'
+        odoo_user="$TARGET_USER_NAME"
+        adduser --uid "$TARGET_UID" --disabled-login --gecos "" --quiet \
+            "$odoo_user"
+
+        # Add target user to odoo group so that he can read/write the content
+        # of /opt/odoo
+        usermod -a -G odoo "$odoo_user"
+    else
+        # Target user already exists in the following cases:
+        #  1) Mapping with the same UID as odoo, OK
+        #  2) Target user has already been created (e.g. container has been
+        #     restarted), OK
+        #  3) Mapping with another existing user (e.g. root, etc.), not OK
+        odoo_user_id=$( id -u "$odoo_user" )
+        target_uid_name=$( getent passwd "$TARGET_UID" | cut -d: -f1 )
+
+        if [ "$TARGET_UID" -ne "$odoo_user_id" ] && \
+                [ "$TARGET_USER_NAME" != "$target_uid_name" ]; then
+            echo $log_src[`date +%F.%H:%M:%S`]' ERROR: Cannot create target' \
+                'user as target UID already exists.'
+            exit 1
+        fi
     fi
 }
 
 function start {
-    echo $log_src[`date +%F.%H:%M:%S`]' Searching for target Odoo user...'
-    # FIXME Should not be an external script (see reason in script header)
-    bash /app/bin/target_user.sh
-    odoo_user=$( cat /tmp/odoo_user )
-    rm -f /tmp/odoo_user
+    # Host user mapping
+    odoo_user='odoo'
+    if [ "$TARGET_UID" ]; then
+        _host_user_mapping
+    fi
 
     # If the folders mapped to the volumes didn't exist, Docker has created
     # them with root instead of the target Odoo user. Making sure to give back
@@ -142,32 +189,12 @@ function start {
     _download_addons
 
     echo $log_src[`date +%F.%H:%M:%S`]' Running odoo...'
-    set +e
-    if [ ! -e "$1" ]; then
-        echo $log_src[`date +%F.%H:%M:%S`]' ...with additional args:' "$*"
+    if [ ! -e $1 ]; then
+        echo $log_src[`date +%F.%H:%M:%S`]' ...with additional args:' $*
     fi
     sudo -i -u "$odoo_user" /usr/bin/python \
-                            "/opt/odoo/sources/odoo/$BINARY_NAME" \
-                            -c "$odoo_conf_file" \
-                            $*
-
-    SERVICE_PID="$!"
-    set -e
+        "/opt/odoo/sources/odoo/$BINARY_NAME" -c "$odoo_conf_file" $*
 }
 
-# smart shutdown on SIGINT and SIGTERM
-function on_exit() {
-    kill -TERM "$SERVICE_PID"
-    wait "$SERVICE_PID" 2> /dev/null
-    exit 0
-}
-trap on_exit INT TERM
-
-echo $log_src[`date +%F.%H:%M:%S`]' Running command...'
-for arg in "$*"
-do
-    # Not protected with `"` in order to pass the arguments
-    $arg
-done
-
-wait
+# Run command
+"$*"

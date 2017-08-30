@@ -197,4 +197,5 @@ function start {
 }
 
 # Run command
-"$*"
+$*
+

@@ -12,31 +12,39 @@ odoo_user='odoo'
 
 # Check if there's a target user to run Odoo
 if [ "$TARGET_UID" ]; then
+    # Name of the target Odoo user
+    TARGET_USER_NAME='target-odoo-user'
+
     # Check whether target user exists or not
-    exists=$( getent passwd $TARGET_UID | wc -l )
+    exists=$( getent passwd "$TARGET_UID" | wc -l )
 
     # Create target user
-    if [ $exists == "0" ]; then
+    if [ "$exists" == "0" ]; then
         echo $log_src[`date +%F.%H:%M:%S`]' Creating target Odoo user...'
-        odoo_user='target-odoo-user'
-        adduser --uid $TARGET_UID --disabled-login --gecos "" --quiet $odoo_user
+        odoo_user="$TARGET_USER_NAME"
+        adduser --uid "$TARGET_UID" --disabled-login --gecos "" --quiet \
+            "$odoo_user"
 
         # Add target user to odoo group so that he can read/write the content
         # of /opt/odoo
-        usermod -a -G odoo $odoo_user
+        usermod -a -G odoo "$odoo_user"
     else
-        # Target user already exists, make sure it's odoo
-        odoo_user_id=$( id -u $odoo_user )
+        # Target user already exists in the following cases:
+        #  1) Mapping with the same UID as odoo, OK
+        #  2) Target user has already been created (e.g. container has been
+        #     restarted), OK
+        #  3) Mapping with another existing user (e.g. root, etc.), not OK
+        odoo_user_id=$( id -u "$odoo_user" )
+        target_uid_name=$( getent passwd "$TARGET_UID" | cut -d: -f1 )
 
-        # If the user already exists, check if it's the same as odoo
-        if [ $TARGET_UID -ne $odoo_user_id ]; then
-            echo $log_src[`date +%F.%H:%M:%S`]' ERROR: The UID of the target' \
-                'user already exists but it is not the same as the ID of' \
-                '`odoo` user'
+        if [ "$TARGET_UID" -ne "$odoo_user_id" ] && \
+                [ "$TARGET_USER_NAME" != "$target_uid_name" ]; then
+            echo $log_src[`date +%F.%H:%M:%S`]' ERROR: Cannot create target' \
+                'user as target UID already exists.'
             exit 1
         fi
     fi
 fi
 
 # Return target Odoo user to boot script
-echo $odoo_user > /tmp/odoo_user
+echo "$odoo_user" > /tmp/odoo_user

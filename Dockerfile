@@ -88,8 +88,7 @@ USER odoo
 
 # If the folders are created with "RUN mkdir" command, they will belong to root
 # instead of odoo! Hence the "RUN /bin/bash -c" trick.
-RUN /bin/bash -c "mkdir -p /opt/odoo/{bin,etc,sources/odoo,additional_addons,data,ssh}"
-RUN /bin/bash -c "mkdir -p /opt/odoo/var/{run,log,egg-cache}"
+RUN /bin/bash -c "mkdir -p /opt/odoo/{etc,sources/odoo,additional_addons,data,ssh}"
 
 # Add Odoo OCB sources and remove .git folder in order to reduce image size
 WORKDIR /opt/odoo/sources
@@ -107,7 +106,6 @@ User 0
 RUN chmod -R 775 /opt/odoo && chown -R odoo:odoo /opt/odoo
 
 VOLUME [ \
-  "/opt/odoo/var", \
   "/opt/odoo/etc", \
   "/opt/odoo/additional_addons", \
   "/opt/odoo/data", \

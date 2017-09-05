@@ -23,26 +23,13 @@ REGEX_ADDONS_PATH = r'^addons_path\s*=\s*'
 
 class Repo(object):
     """
-    oca_dependencies.txt
+    Fetch Git repositories recursively.
 
-    For public repo:
+    Based on the OCA cross repository dependency management system:
+    https://github.com/OCA/maintainer-quality-tools/pull/159
 
-    oca-repo -> https://github.com/OCA/oca-repo (default branch)
-    oca-repo 8.0 -> https://github.com/OCA/oca-repo (branch: 8.0)
-    organization/public-repo -> https://github.com/organization/public-repo (default branch)
-    organization/public-repo 8.0 -> https://github.com/organization/public-repo (branch: 8.0)
-    https://github.com/organization/public-repo -> https://github.com/organization/public-repo (default branch)
-    https://github.com/organization/public-repo 8.0 -> https://github.com/organization/public-repo (branch: 8.0)
-    public_repo_rename https://github.com/organization/public-repo -> https://github.com/organization/public-repo (default branch)
-    public_repo_rename https://github.com/organization/public-repo 8.0 -> https://github.com/organization/public-repo (branch: 8.0)
-
-    For private repo:
-
-    git@github.com:Elico-Corp/private-repo
-    git@github.com:Elico-Corp/private-repo 8.0
-    private_repo_rename git@github.com:Elico-Corp/private-repo
-    private_repo_rename git@github.com:Elico-Corp/private-repo 8.0
-
+    Following the oca_dependencies.txt syntax:
+    https://github.com/OCA/maintainer-quality-tools/blob/master/sample_files/oca_dependencies.txt
     """
     def __init__(self, remote_url, parent=None):
         if parent:
@@ -194,13 +181,11 @@ class Repo(object):
             return
         if os.path.exists(self.path):
             if fetch_dep:
-                print('PULL: %s %s' % (self.path, self.branch))
                 cmd = self.update_cmd
                 call(cmd)
             else:
                 self.fetch_branch_name()
         else:
-            print('CLONE: %s %s' % (self.path, self.branch))
             result = call(self.download_cmd)
             if result != 0:
                 if parent and parent.parent:
@@ -271,7 +256,6 @@ def main():
 
     if remote_url:
         # Only one master repo to download
-        print('remote_url: %s ' % remote_url)
         Repo(remote_url).download(fetch_dep=fetch_dep)
     else:
         # List of repos is defined in oca_dependencies.txt at the root of
@@ -281,7 +265,6 @@ def main():
                 l = line.strip('\n').strip()
                 if l.startswith('#') or not l:
                     continue
-                print('remote_url: %s ' % l)
                 Repo(l).download(fetch_dep=fetch_dep)
 
     write_addons_path()

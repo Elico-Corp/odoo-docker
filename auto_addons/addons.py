@@ -66,10 +66,10 @@ class Repo(object):
             self.organization = args[0]
             self.repository = args[1]
         else:
-            print 'FATAL:'
-            print 'Expected pattern option #1: public-repo'
-            print 'Expected pattern option #2: organization/public-repo'
-            print 'Actual value: %s' % repo
+            print >> sys.stderr, 'FATAL: unexpected repository pattern'
+            print >> sys.stderr, 'Expected pattern #1: public-repo'
+            print >> sys.stderr, 'Expected pattern #2: organization/public-repo'
+            print >> sys.stderr, 'Actual value: %s' % repo
 
     def _parse_url(self, url):
         path = None
@@ -84,9 +84,9 @@ class Repo(object):
             if len(parsed_url.path) > 0:
                 path = parsed_url.path[1:]
             else:
-                print 'FATAL:'
-                print 'Expected pattern: https://github.com/organization/public-repo' 
-                print 'Actual value: %s' % url
+                print >> sys.stderr, 'FATAL: unexpected repository pattern'
+                print >> sys.stderr, 'Expected pattern: https://github.com/organization/public-repo'
+                print >> sys.stderr, 'Actual value: %s' % url
                 return
         else:
             # Pattern: 'git@github.com:organization/private-repo'
@@ -97,9 +97,9 @@ class Repo(object):
                 self.netloc = args[0]
                 path = args[1]
             else:
-                print 'FATAL:'
-                print 'Expected pattern: git@github.com:organization/private-repo' 
-                print 'Actual value: %s' % url
+                print >> sys.stderr, 'FATAL: unexpected repository pattern'
+                print >> sys.stderr, 'Expected pattern: git@github.com:organization/private-repo'
+                print >> sys.stderr, 'Actual value: %s' % url
                 return
 
         # Pattern: 'organization/repo'
@@ -110,9 +110,9 @@ class Repo(object):
             # Repo might end with '.git' but it's optional
             self.repository = args[1].replace('.git', '')
         else:
-            print 'FATAL:'
-            print 'Expected pattern: organization/repo' 
-            print 'Actual value: %s' % path
+            print >> sys.stderr, 'FATAL: unexpected repository pattern'
+            print >> sys.stderr, 'Expected pattern: organization/repo' 
+            print >> sys.stderr, 'Actual value: %s' % path
 
     def _parse_repo(self, repo):
         if Repo._is_url(repo):
@@ -194,18 +194,22 @@ class Repo(object):
         )
 
         # Search for the branch prefixed with '* '
-        output = subprocess.check_output(branch_cmd, shell=True)
-        found = False
-        for line in output.split('\n'):
-            if line.startswith('*'):
-                self.branch = line.replace('* ', '')
-                found = True
-                break
+        try:
+            found = False
+            output = subprocess.check_output(branch_cmd, shell=True)
+            for line in output.split('\n'):
+                if line.startswith('*'):
+                    self.branch = line.replace('* ', '')
+                    found = True
+                    break
 
-        if not found:
-            print 'FATAL:'
-            print 'Cannot fetch branch name'
-            print 'Path: %s' % self.path
+            if not found:
+                print >> sys.stderr, 'FATAL: cannot fetch branch name'
+                print >> sys.stderr, 'Path: %s' % self.path
+
+        except Exception, e:
+            print >> sys.stderr, 'FATAL: cannot fetch branch name'
+            print >> sys.stderr, e
 
     def _download_dependencies(self, addons_path):
         # Check if the repo contains a dependency file
@@ -237,9 +241,8 @@ class Repo(object):
                 result = subprocess.call(self.update_cmd)
 
                 if result != 0:
-                    print 'FATAL:'
-                    print 'Cannot git pull repository'
-                    print 'URL: %s' % self.remote_url
+                    print >> sys.stderr, 'FATAL: cannot git pull repository'
+                    print >> sys.stderr, 'URL: %s' % self.remote_url
         else:
             # Perform `git clone`
             result = subprocess.call(self.download_cmd)
@@ -258,9 +261,8 @@ class Repo(object):
                     self.branch = None
                     self.download(addons_path, is_retry=True)
                 else:
-                    print 'FATAL:'
-                    print 'Cannot git clone repository'
-                    print 'URL: %s' % self.remote_url
+                    print >> sys.stderr, 'FATAL: cannot git clone repository'
+                    print >> sys.stderr, 'URL: %s' % self.remote_url
             else:
                 # Branch name is used to fetch the child repos
                 self._fetch_branch_name()

@@ -131,6 +131,7 @@ class Repo(object):
             # Pattern: 'repo'
             self._parse_repo(repo)
             self.folder = self.repository
+
         if len(args) == 2:
             if Repo._is_url(args[1]):
                 # Pattern: 'folder repo'
@@ -142,6 +143,7 @@ class Repo(object):
                 self._parse_repo(args[0])
                 self.folder = self.repository
                 self.branch = args[1]
+
         elif len(args) == 3:
             # Pattern: 'folder repo branch'
             self._parse_repo(args[1])
@@ -171,14 +173,14 @@ class Repo(object):
             cmd = 'git clone %s %s' % (
                 self.resolve_url, self.path
             )
-        return cmd.split()
+        return cmd
 
     @property
     def update_cmd(self):
         cmd = 'git -C %s pull origin %s' % (
             self.path, self.branch
         )
-        return cmd.split()
+        return cmd
 
     def _fetch_branch_name(self):
         # Example of output from `git branch` command:
@@ -238,14 +240,18 @@ class Repo(object):
 
             if self.fetch_dep:
                 # Perform `git pull`
-                result = subprocess.call(self.update_cmd)
+                print 'Pulling: %s' % self.remote_url
+                sys.stdout.flush()
+                result = subprocess.call(self.update_cmd.split())
 
                 if result != 0:
                     print >> sys.stderr, 'FATAL: cannot git pull repository'
                     print >> sys.stderr, 'URL: %s' % self.remote_url
         else:
             # Perform `git clone`
-            result = subprocess.call(self.download_cmd)
+            print 'Cloning: %s' % self.remote_url
+            sys.stdout.flush()
+            result = subprocess.call(self.download_cmd.split())
 
             if result != 0:
                 # Since `git clone` failed, try some workarounds

@@ -36,7 +36,7 @@ class Repo(object):
         self.netloc = DEFAULT_GIT_HOSTING_SERVICE
         self.organization = DEFAULT_ORGANIZATION
         self.repository = None
-        self.branch = self.parent.branch if parent else None
+        self.branch = parent.branch if parent else None
         self.folder = None
 
         self._parse()
@@ -53,10 +53,11 @@ class Repo(object):
 
     @staticmethod
     def _is_url(url):
-        return _is_http(url) or _is_git_ssh(url)
+        return Repo._is_http(url) or Repo._is_git_ssh(url)
 
     def _parse_org_repo(self, repo):
         args = repo.split('/')
+
         if len(args) == 1:
             # Pattern: 'public-repo'
             self.repository = args[0]
@@ -64,30 +65,59 @@ class Repo(object):
             # Pattern: 'organization/public-repo'
             self.organization = args[0]
             self.repository = args[1]
+        else:
+            print 'FATAL:'
+            print 'Expected pattern option #1: public-repo'
+            print 'Expected pattern option #2: organization/public-repo'
+            print 'Actual value: %s' % repo
 
     def _parse_url(self, url):
         path = None
-        if self._is_http(url):
+
+        if Repo._is_http(url):
             # Pattern: 'https://github.com/organization/public-repo'
             parsed_url = urlparse.urlparse(url)
+
             self.scheme = parsed_url.scheme
             self.netloc = parsed_url.netloc
-            path = parsed_url.path
+
+            if len(parsed_url.path) > 0:
+                path = parsed_url.path[1:]
+            else:
+                print 'FATAL:'
+                print 'Expected pattern: https://github.com/organization/public-repo' 
+                print 'Actual value: %s' % url
+                return
         else:
             # Pattern: 'git@github.com:organization/private-repo'
             self.scheme = 'ssh'
             args = url.split(':')
-            self.netloc = args[0]
-            path = args[1]
+
+            if len(args) == 2:
+                self.netloc = args[0]
+                path = args[1]
+            else:
+                print 'FATAL:'
+                print 'Expected pattern: git@github.com:organization/private-repo' 
+                print 'Actual value: %s' % url
+                return
+
+        # Pattern: 'organization/repo'
         args = path.split('/')
-        self.organization = args[1]
-        # Repo might end with '.git' but it's optional
-        self.repository = args[2].replace('.git', '')
+
+        if len(args) == 2:
+            self.organization = args[0]
+            # Repo might end with '.git' but it's optional
+            self.repository = args[1].replace('.git', '')
+        else:
+            print 'FATAL:'
+            print 'Expected pattern: organization/repo' 
+            print 'Actual value: %s' % path
 
     def _parse_repo(self, repo):
-        if self._is_url(args[1]):
+        if Repo._is_url(repo):
             self._parse_url(repo)
-        else
+        else:
             self._parse_org_repo(repo)
 
     def _parse(self):
@@ -99,10 +129,10 @@ class Repo(object):
 
         if len(args) == 1:
             # Pattern: 'repo'
-            _parse_repo(repo)
+            self._parse_repo(repo)
             self.folder = self.repository
         if len(args) == 2:
-            if self._is_url(args[1]):
+            if Repo._is_url(args[1]):
                 # Pattern: 'folder repo'
                 # This pattern is only valid if the repo is a URL
                 self._parse_url(args[1])
@@ -165,9 +195,17 @@ class Repo(object):
 
         # Search for the branch prefixed with '* '
         output = subprocess.check_output(branch_cmd, shell=True)
+        found = False
         for line in output.split('\n'):
             if line.startswith('*'):
                 self.branch = line.replace('* ', '')
+                found = True
+                break
+
+        if not found:
+            print 'FATAL:'
+            print 'Cannot fetch branch name'
+            print 'Path: %s' % self.path
 
     def _download_dependencies(self, addons_path):
         # Check if the repo contains a dependency file
@@ -180,9 +218,10 @@ class Repo(object):
             for line in f:
                 l = line.strip('\n').strip()
                 if l and not l.startswith('#'):
-                    Repo(l, self).download(addons_path)
+                    Repo(l, self.fetch_dep, self).download(addons_path)
 
     def download(self, addons_path, parent=None, is_retry=False):
+
 	# No need to fetch a repo twice (it could also cause infinite loop)
         if self.path in addons_path:
             return
@@ -195,7 +234,12 @@ class Repo(object):
 
             if self.fetch_dep:
                 # Perform `git pull`
-                subprocess.call(self.update_cmd)
+                result = subprocess.call(self.update_cmd)
+
+                if result != 0:
+                    print 'FATAL:'
+                    print 'Cannot git pull repository'
+                    print 'URL: %s' % self.remote_url
         else:
             # Perform `git clone`
             result = subprocess.call(self.download_cmd)
@@ -206,12 +250,17 @@ class Repo(object):
                     # Retry recursively using the ancestors' branch
                     self.branch = parent.parent.branch
                     self.download(
+                        addons_path,
                         parent=parent.parent,
                         is_retry=True)
-                else:
-                    # Retry with the default branch of the repo
+                elif not is_retry:
+                    # Retry one last time with the default branch of the repo
                     self.branch = None
-                    self.download(is_retry=True)
+                    self.download(addons_path, is_retry=True)
+                else:
+                    print 'FATAL:'
+                    print 'Cannot git clone repository'
+                    print 'URL: %s' % self.remote_url
             else:
                 # Branch name is used to fetch the child repos
                 self._fetch_branch_name()
@@ -231,7 +280,7 @@ def write_addons_path(addons_path):
                 target.write(line)
 
         # Append addons_path
-        target_file.write('addons_path = %s' % ','.join(addons_path))
+        target.write('addons_path = %s' % ','.join(addons_path))
 
     shutil.move(conf_file, ODOO_CONF)
 
@@ -249,12 +298,6 @@ def main():
     # 2nd param is the ADDONS_REPO
     if len(sys.argv) > 2:
         remote_url = sys.argv[2]
-
-    # If the ADDONS_REPO contains a branch name, there is a space before the
-    # branch name so the branch name becomes the 3rd param
-    # FIXME TBC if it's still the case since bash variables are protected by ""
-    if len(sys.argv) > 3:
-        remote_url += ' ' + sys.argv[3]
 
     if remote_url:
         # Only one master repo to download

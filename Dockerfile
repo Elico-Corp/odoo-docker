@@ -2,9 +2,9 @@ FROM ubuntu:14.04
 MAINTAINER Elico Corp <webmaster@elico-corp.com>
 
 # Define build constants
-ENV GIT_BRANCH=7.0 \
-  PG_VERSION=9.5 \
-  BINARY_NAME=openerp-server
+ENV GIT_BRANCH="7.0" \
+  PG_VERSION="9.5" \
+  BINARY_NAME="openerp-server"
 
 # Set timezone to UTC
 RUN ln -sf /usr/share/zoneinfo/Etc/UTC /etc/localtime

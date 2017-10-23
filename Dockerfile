@@ -62,7 +62,7 @@ ADD sources/pip-req.txt /opt/sources/pip-req.txt
 RUN pip install -r /opt/sources/pip-req.txt
 
 # Install LESS
-RUN npm install -g less less-plugin-clean-css && \
+RUN npm install -g less@2.7.2 less-plugin-clean-css@1.5.1 && \
   ln -s /usr/bin/nodejs /usr/bin/node
 
 # must unzip this package to make it visible as an odoo external dependency

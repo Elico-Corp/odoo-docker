@@ -330,10 +330,10 @@ The `docker-compose.yml` should look like:
         image: postgres:9.5
         volumes:
           - ./volumes/postgres:/var/lib/postgresql/data
+          - /etc/passwd:/etc/passwd:ro
         environment:
           - POSTGRES_USER=postgres
           - POSTGRES_PASSWORD=strong_pg_superuser_password
-          - /etc/passwd:/etc/passwd:ro
         user: 1001:1001
 
       odoo:
@@ -445,10 +445,10 @@ as well as all the Git repositories it depends on, you can use the following
         image: postgres:9.5
         volumes:
           - ./volumes/postgres:/var/lib/postgresql/data
+          - /etc/passwd:/etc/passwd:ro
         environment:
           - POSTGRES_USER=postgres
           - POSTGRES_PASSWORD=strong_pg_superuser_password
-          - /etc/passwd:/etc/passwd:ro
         user: 1001:1001
 
       odoo:
@@ -517,10 +517,10 @@ The `docker-compose.yml` should look like:
         image: postgres:9.5
         volumes:
           - ./volumes/postgres:/var/lib/postgresql/data
+          - /etc/passwd:/etc/passwd:ro
         environment:
           - POSTGRES_USER=postgres
           - POSTGRES_PASSWORD=strong_pg_superuser_password
-          - /etc/passwd:/etc/passwd:ro
         user: 1001:1001
 
       odoo:

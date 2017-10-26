@@ -82,7 +82,6 @@ more information about Compose, see the [official documentation][dc-doc].
         image: postgres:9.5
         environment:
           - POSTGRES_USER=odoo
-        network_mode: bridge
 
       odoo:
         image: elicocorp/odoo:10.0
@@ -93,7 +92,6 @@ more information about Compose, see the [official documentation][dc-doc].
           - postgres:db
         environment:
           - ODOO_DB_USER=odoo
-        network_mode: bridge
 
 Once this file is created, simply move to the corresponding folder and run the
 following command to start Odoo:
@@ -150,7 +148,6 @@ The `docker-compose.yml` should look like:
         environment:
           - POSTGRES_USER=postgres
           - POSTGRES_PASSWORD=strong_pg_superuser_password
-        network_mode: bridge
 
       odoo:
         image: elicocorp/odoo:10.0
@@ -163,7 +160,6 @@ The `docker-compose.yml` should look like:
           - ODOO_ADMIN_PASSWD=strong_odoo_master_password
           - ODOO_DB_USER=odoo
           - ODOO_DB_PASSWORD=strong_pg_odoo_password
-        network_mode: bridge
 
 **Note:** If Odoo is behind a reverse proxy, it is also suggested to change the
 port published by the container (though this port is actually not opened to the
@@ -205,7 +201,6 @@ The `docker-compose.yml` should look like:
         environment:
           - POSTGRES_USER=postgres
           - POSTGRES_PASSWORD=strong_pg_superuser_password
-        network_mode: bridge
 
       odoo:
         image: elicocorp/odoo:10.0
@@ -221,7 +216,6 @@ The `docker-compose.yml` should look like:
           - ODOO_ADMIN_PASSWD=strong_odoo_master_password
           - ODOO_DB_USER=odoo
           - ODOO_DB_PASSWORD=strong_pg_odoo_password
-        network_mode: bridge
 
 **Note:** With this configuration, all the data created in the volumes will
 belong to the user whose UID matches the user running inside the container.
@@ -336,12 +330,11 @@ The `docker-compose.yml` should look like:
         image: postgres:9.5
         volumes:
           - ./volumes/postgres:/var/lib/postgresql/data
+          - /etc/passwd:/etc/passwd:ro
         environment:
           - POSTGRES_USER=postgres
           - POSTGRES_PASSWORD=strong_pg_superuser_password
-          - /etc/passwd:/etc/passwd:ro
         user: 1001:1001
-        network_mode: bridge
 
       odoo:
         image: elicocorp/odoo:10.0
@@ -358,7 +351,6 @@ The `docker-compose.yml` should look like:
           - ODOO_ADMIN_PASSWD=strong_odoo_master_password
           - ODOO_DB_USER=odoo
           - ODOO_DB_PASSWORD=strong_pg_odoo_password
-        network_mode: bridge
 
 **Note:** For a more dynamic UID mapping, you can use Compose
 [variable substitution][dk-var]. Simply export the environment variable `UID`
@@ -453,12 +445,11 @@ as well as all the Git repositories it depends on, you can use the following
         image: postgres:9.5
         volumes:
           - ./volumes/postgres:/var/lib/postgresql/data
+          - /etc/passwd:/etc/passwd:ro
         environment:
           - POSTGRES_USER=postgres
           - POSTGRES_PASSWORD=strong_pg_superuser_password
-          - /etc/passwd:/etc/passwd:ro
         user: 1001:1001
-        network_mode: bridge
 
       odoo:
         image: elicocorp/odoo:10.0
@@ -477,7 +468,6 @@ as well as all the Git repositories it depends on, you can use the following
           - ODOO_ADMIN_PASSWD=strong_odoo_master_password
           - ODOO_DB_USER=odoo
           - ODOO_DB_PASSWORD=strong_pg_odoo_password
-        network_mode: bridge
 
 **Note:** After the repositories have been fetched, it might not be required to
 pull them every time the container is restarted. In that case, simply set the
@@ -527,12 +517,11 @@ The `docker-compose.yml` should look like:
         image: postgres:9.5
         volumes:
           - ./volumes/postgres:/var/lib/postgresql/data
+          - /etc/passwd:/etc/passwd:ro
         environment:
           - POSTGRES_USER=postgres
           - POSTGRES_PASSWORD=strong_pg_superuser_password
-          - /etc/passwd:/etc/passwd:ro
         user: 1001:1001
-        network_mode: bridge
 
       odoo:
         image: elicocorp/odoo:10.0
@@ -552,7 +541,6 @@ The `docker-compose.yml` should look like:
           - ODOO_ADMIN_PASSWD=strong_odoo_master_password
           - ODOO_DB_USER=odoo
           - ODOO_DB_PASSWORD=strong_pg_odoo_password
-        network_mode: bridge
 
 **Note:** If the host user has a valid SSH key under the `.ssh` folder of his
 home folder, he can map his `.ssh` folder instead, e.g.:

@@ -20,49 +20,53 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com \
 
 # Add PostgreSQL's repository. It contains the most recent stable release
 # of PostgreSQL.
-# Install dependencies as distrib packages when system bindings are required.
-# Some of them extend the basic Odoo requirements for a better "apps"
-# compatibility.
-# Most dependencies are distributed as PIP packages at the next step
 RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main" > \
   /etc/apt/sources.list.d/pgdg.list && \
   apt-get update && \
   apt-get -yq install \
-    ghostscript \
     postgresql-client-$PG_VERSION \
-    python \
-    python-pip \
-    python-imaging \
-    python-pychart python-libxslt1 xfonts-base xfonts-75dpi \
-    libxrender1 libxext6 fontconfig \
-    python-zsi \
-    python-lasso \
-    libzmq3 \
+    # Install dependencies as distrib packages when system bindings are
+    # required. Some of them extend the basic Odoo requirements for a better
+    # "apps" compatibility.
+    # Most dependencies are distributed as PIP packages at the next step
+    fontconfig=2.11.0-0ubuntu4.2 \
+    ghostscript=9.10~dfsg-0ubuntu10.10 \
+    libxext6=2:1.3.2-1ubuntu0.0.14.04.1 \
+    libxrender1=1:0.9.8-1build0.14.04.1 \
+    python=2.7.5-5ubuntu3 \
+    python-imaging=2.3.0-1ubuntu3.4 \
+    python-lasso=2.4.0-2build1 \
+    python-libxslt1=1.1.28-2ubuntu0.1 \
+    python-pip=1.5.4-1ubuntu4 \
+    python-pychart=1.39-7build1 \
+    python-zsi=2.1~a1-3build1 \
+    xfonts-base=1:1.0.3 \
+    xfonts-75dpi=1:1.0.3 \
     # libpq-dev is needed to install pg_config which is required by psycopg2
-    libpq-dev \
-    # These libraries are needed to install the pip modules
-    python-dev \
-    libffi-dev \
-    libxml2-dev \
-    libxslt1-dev \
-    libldap2-dev \
-    libsasl2-dev \
-    libssl-dev \
+    libpq-dev=10.0-1.pgdg14.04+1 \
+    # These libraries are needed to install the PIP modules
+    libffi-dev=3.1~rc1+r3.0.13-12ubuntu0.2 \
+    libldap2-dev=2.4.31-1+nmu2ubuntu8.4 \
+    libsasl2-dev=2.1.25.dfsg1-17build1 \
+    libssl-dev=1.0.1f-1ubuntu2.22 \
+    libxml2-dev=2.9.1+dfsg1-3ubuntu4.10 \
+    libxslt1-dev=1.1.28-2ubuntu0.1 \
+    python-dev=2.7.5-5ubuntu3 \
     # Librairies required for LESS
-    node-less \
-    nodejs \
-    npm \
+    node-less=1.4.2-1 \
+    nodejs=0.10.25~dfsg2-2ubuntu1 \
+    npm=1.3.10~dfsg-1 \
     # This library is necessary to upgrade PIL/pillow module
-    libjpeg8-dev \
+    libjpeg8-dev=8c-2ubuntu8 \
     # Git is required to clone Odoo OCB project
-    git
+    git=1:1.9.1-1ubuntu0.7
 
 # Install Odoo python dependencies
 ADD sources/pip-req.txt /opt/sources/pip-req.txt
 RUN pip install -r /opt/sources/pip-req.txt
 
 # Install LESS
-RUN npm install -g less less-plugin-clean-css && \
+RUN npm install -g less@2.7.2 less-plugin-clean-css@1.5.1 && \
   ln -s /usr/bin/nodejs /usr/bin/node
 
 # must unzip this package to make it visible as an odoo external dependency

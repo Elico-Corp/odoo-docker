@@ -1,10 +1,9 @@
 # elicocorp/odoo
-Simple yet powerful [Odoo][odoo] image for [Docker][dk] based on [OCB][ocb]
-code and maintained by [Elico Corporation][ec].
+Simple yet powerful [Odoo][odoo] image for [Docker][dk] maintained by
+[Elico Corporation][ec].
 
   [odoo]: https://www.odoo.com/
   [dk]: https://www.docker.com/
-  [ocb]: https://github.com/OCA/OCB "Odoo Community Backports"
   [ec]: https://www.elico-corp.com/
 
 <a name="toc"></a>
@@ -608,7 +607,6 @@ image [localized for China][odoo-china].
 * Current list of PIP requirements is maintenained in this repository. It
 should use the `https://github.com/OCA/OCB/blob/10.0/requirements.txt` instead.
 To be noted that this file is not available in v7.
-* Use the standard Odoo code rather than the OCB
 * Use the code of `maintainer-quality-tools` to pull the `oca_dependencies.txt`
 
 <a name="bug_tracker"></a>

@@ -3,39 +3,21 @@ MAINTAINER Elico Corp <webmaster@elico-corp.com>
 
 # Define build constants
 ENV GIT_BRANCH=8.0 \
-  PG_VERSION=9.5 \
   BINARY_NAME=openerp-server
 
 # Set timezone to UTC
 RUN ln -sf /usr/share/zoneinfo/Etc/UTC /etc/localtime
 
-# FIXME not working with Ubuntu 16.04
 # Generate locales
 RUN apt update \
   && apt -yq install locales \
   && locale-gen en_US.UTF-8 \
   && update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
 
-# Install dependencies
+# Install APT dependencies
+ADD sources/apt.txt /opt/sources/apt.txt
 RUN apt update \
-  && apt -yq install \
-    fontconfig=2.11.94-0ubuntu1.1 \
-    git=1:2.7.4-0ubuntu1.3 \
-    libjpeg-turbo8=1.4.2-0ubuntu3 \
-    libldap2-dev=2.4.42+dfsg-2ubuntu3.2 \
-    libsasl2-dev=2.1.26.dfsg1-14build1 \
-    libssl-dev=1.0.2g-1ubuntu4.8 \
-    libxml2-dev=2.9.3+dfsg1-1ubuntu0.3 \
-    libxrender1=1:0.9.9-0ubuntu1 \
-    libxslt1-dev=1.1.28-2.1ubuntu0.1 \
-    node-less=1.6.3~dfsg-2 \
-    nodejs=4.2.6~dfsg-1ubuntu4.1 \
-    npm=3.5.2-0ubuntu4 \
-    postgresql-client-$PG_VERSION \
-    python-dev=2.7.11-1 \
-    python-pip=8.1.1-2ubuntu0.4 \
-    sudo=1.8.16-0ubuntu1.5 \
-    zlib1g-dev=1:1.2.8.dfsg-2ubuntu4.1
+  && awk '! /^ *(#|$)/' /opt/sources/apt.txt | xargs -r apt install -yq
 
 # Create the odoo user
 RUN useradd --create-home --home-dir /opt/odoo --no-log-init odoo
@@ -62,8 +44,8 @@ User 0
 RUN pip install -r /opt/odoo/sources/odoo/requirements.txt
 
 # Install extra python dependencies
-ADD sources/requirements.txt /opt/sources/requirements.txt
-RUN pip install -r /opt/sources/requirements.txt
+ADD sources/pip.txt /opt/sources/pip.txt
+RUN pip install -r /opt/sources/pip.txt
 
 # Install LESS
 RUN npm install -g less@2.7.3 less-plugin-clean-css@1.5.1 \

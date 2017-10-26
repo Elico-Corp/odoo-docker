@@ -20,6 +20,7 @@ RUN apt update \
   && apt -yq install \
     fontconfig=2.11.94-0ubuntu1.1 \
     git=1:2.7.4-0ubuntu1.3 \
+    libffi-dev=3.2.1-4 \
     libjpeg-turbo8=1.4.2-0ubuntu3 \
     libldap2-dev=2.4.42+dfsg-2ubuntu3.2 \
     libsasl2-dev=2.1.26.dfsg1-14build1 \

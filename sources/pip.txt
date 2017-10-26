@@ -1,0 +1,5 @@
+erppeek==1.6.3
+OdooRPC==0.6.0
+py3o.template==0.9.11
+py3o.types==0.1.1
+

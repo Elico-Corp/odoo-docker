@@ -623,12 +623,7 @@ help us smash it by providing detailed and welcomed feedback.
 * Sebastien Maillard <sebastien.maillard@elico-corp.com>
 * Eric Caudal <eric.caudal@elico-corp.com>
 * Noah Wang <noah.wang@elico-corp.com>
-
-This image is a fork of [XCG Consulting][xcg] Odoo Docker image available
-[here][xcgd].
-
-  [xcg]: https://www.xcg-consulting.fr/
-  [xcgd]: https://hub.docker.com/r/xcgd/odoo/
+* Augustin Cisterne-Kaas <augustin.cisternekaas@elico-corp.com>
 
 <a name="maintainer"></a>
 ### Maintainer[^][toc]

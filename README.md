@@ -604,9 +604,6 @@ image [localized for China][odoo-china].
 <a name="roadmap"></a>
 ## Roadmap[^][toc]
 
-* Current list of PIP requirements is maintenained in this repository. It
-should use the `https://github.com/OCA/OCB/blob/10.0/requirements.txt` instead.
-To be noted that this file is not available in v7.
 * Use the code of `maintainer-quality-tools` to pull the `oca_dependencies.txt`
 
 <a name="bug_tracker"></a>

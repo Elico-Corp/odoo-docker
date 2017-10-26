@@ -16,6 +16,7 @@ RUN apt update \
   && locale-gen en_US.UTF-8 \
   && update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
 
+# Install dependencies
 RUN apt update \
   && apt -yq install \
     fontconfig=2.11.94-0ubuntu1.1 \
@@ -48,9 +49,9 @@ USER odoo
 # instead of odoo! Hence the "RUN /bin/bash -c" trick.
 RUN /bin/bash -c "mkdir -p /opt/odoo/{etc,sources/odoo,additional_addons,data,ssh}"
 
-# Add Odoo OCB sources and remove .git folder in order to reduce image size
+# Add Odoo sources and remove .git folder in order to reduce image size
 WORKDIR /opt/odoo/sources
-RUN git clone https://github.com/OCA/OCB.git -b $GIT_BRANCH odoo \
+RUN git clone https://github.com/odoo/odoo.git -b $GIT_BRANCH \
   && rm -rf odoo/.git
 
 ADD sources/odoo.conf /opt/odoo/etc/odoo.conf

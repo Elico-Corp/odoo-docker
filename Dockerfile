@@ -3,7 +3,8 @@ MAINTAINER Elico Corp <webmaster@elico-corp.com>
 
 # Define build constants
 ENV GIT_BRANCH=8.0 \
-  BINARY_NAME=openerp-server
+  PYTHON_BIN=python \
+  SERVICE_BIN=openerp-server
 
 # Set timezone to UTC
 RUN ln -sf /usr/share/zoneinfo/Etc/UTC /etc/localtime

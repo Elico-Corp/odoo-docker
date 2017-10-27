@@ -192,8 +192,8 @@ function start {
     if [ ! -e $1 ]; then
         echo $log_src[`date +%F.%H:%M:%S`]' ...with additional args:' $*
     fi
-    sudo -i -u "$odoo_user" python \
-        "/opt/odoo/sources/odoo/$BINARY_NAME" -c "$odoo_conf_file" $*
+    sudo -i -u "$odoo_user" "$PYTHON_BIN" \
+        "/opt/odoo/sources/odoo/$SERVICE_BIN" -c "$odoo_conf_file" $*
 }
 
 # Run command

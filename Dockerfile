@@ -3,7 +3,8 @@ MAINTAINER Elico Corp <webmaster@elico-corp.com>
 
 # Define build constants
 ENV GIT_BRANCH=11.0 \
-  BINARY_NAME=odoo-bin
+  PYTHON_BIN=python3 \
+  SERVICE_BIN=odoo-bin
 
 # Set timezone to UTC
 RUN ln -sf /usr/share/zoneinfo/Etc/UTC /etc/localtime

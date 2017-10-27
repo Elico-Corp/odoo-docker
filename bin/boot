@@ -116,7 +116,7 @@ function _download_addons {
         fi
 
         echo $log_src[`date +%F.%H:%M:%S`]' Downloading additional addons...'
-        sudo -i -u "$odoo_user" python3 /opt/odoo/auto_addons/addons.py \
+        sudo -i -u "$odoo_user" python /opt/odoo/auto_addons/addons.py \
             "$FETCH_OCA_DEPENDENCIES" "$ADDONS_REPO"
     else
         # No additional addons to download

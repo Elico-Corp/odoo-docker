@@ -41,11 +41,11 @@ ADD auto_addons /opt/odoo/auto_addons
 User 0
 
 # Install Odoo python dependencies
-RUN pip install -r /opt/odoo/sources/odoo/requirements.txt
+RUN pip3 install -r /opt/odoo/sources/odoo/requirements.txt
 
 # Install extra python dependencies
 ADD sources/pip.txt /opt/sources/pip.txt
-RUN pip install -r /opt/sources/pip.txt
+RUN pip3 install -r /opt/sources/pip.txt
 
 # Install LESS
 RUN npm install -g less@2.7.3 less-plugin-clean-css@1.5.1 \

@@ -2,7 +2,7 @@ FROM ubuntu:16.04
 MAINTAINER Elico Corp <webmaster@elico-corp.com>
 
 # Define build constants
-ENV GIT_BRANCH=10.0 \
+ENV GIT_BRANCH=11.0 \
   BINARY_NAME=odoo-bin
 
 # Set timezone to UTC

@@ -1,10 +1,9 @@
 # elicocorp/odoo
-Simple yet powerful [Odoo][odoo] image for [Docker][dk] based on [OCB][ocb]
-code and maintained by [Elico Corporation][ec].
+Simple yet powerful [Odoo][odoo] image for [Docker][dk] maintained by
+[Elico Corporation][ec].
 
   [odoo]: https://www.odoo.com/
   [dk]: https://www.docker.com/
-  [ocb]: https://github.com/OCA/OCB "Odoo Community Backports"
   [ec]: https://www.elico-corp.com/
 
 <a name="toc"></a>
@@ -605,10 +604,6 @@ image [localized for China][odoo-china].
 <a name="roadmap"></a>
 ## Roadmap[^][toc]
 
-* Current list of PIP requirements is maintenained in this repository. It
-should use the `https://github.com/OCA/OCB/blob/10.0/requirements.txt` instead.
-To be noted that this file is not available in v7.
-* Use the standard Odoo code rather than the OCB
 * Use the code of `maintainer-quality-tools` to pull the `oca_dependencies.txt`
 
 <a name="bug_tracker"></a>
@@ -628,12 +623,7 @@ help us smash it by providing detailed and welcomed feedback.
 * Sebastien Maillard <sebastien.maillard@elico-corp.com>
 * Eric Caudal <eric.caudal@elico-corp.com>
 * Noah Wang <noah.wang@elico-corp.com>
-
-This image is a fork of [XCG Consulting][xcg] Odoo Docker image available
-[here][xcgd].
-
-  [xcg]: https://www.xcg-consulting.fr/
-  [xcgd]: https://hub.docker.com/r/xcgd/odoo/
+* Augustin Cisterne-Kaas <augustin.cisternekaas@elico-corp.com>
 
 <a name="maintainer"></a>
 ### Maintainer[^][toc]

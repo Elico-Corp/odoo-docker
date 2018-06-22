@@ -73,44 +73,49 @@ function _update_odoo_conf_params {
 }
 
 function _setup_ssh_key {
-    # Create SSH config folder in $HOME folder of Odoo target user
+    # SSH config folder in $HOME folder of target user
     ssh_folder=$( getent passwd "$odoo_user" | cut -d: -f6 )/.ssh
-    sudo -i -u "$odoo_user" mkdir "$ssh_folder"
 
-    # Copy SSH private key from /opt/odoo/ssh
-    sudo -i -u "$odoo_user" cp /opt/odoo/ssh/id_rsa "$ssh_folder"
+    # SSH config folder already exists when container has been restarted
+    if [ ! -d "$ssh_folder" ]; then
+        # Create SSH config folder
+        sudo -i -u "$odoo_user" mkdir "$ssh_folder"
 
-    echo $log_src[`date +%F.%H:%M:%S`]' Scanning GitHub key...'
-    # Hide ssh-keyscan stderr output since it's actually log message
-    ssh-keyscan github.com 2> /dev/null | \
-        sudo -i -u "$odoo_user" tee "$ssh_folder/known_hosts" > /dev/null
+        # Copy SSH private key from /opt/odoo/ssh
+        sudo -i -u "$odoo_user" cp /opt/odoo/ssh/id_rsa "$ssh_folder"
 
-    # Bind SSH key to GitHub host
-    echo "host github.com
-            HostName github.com
-            User git
-            IdentityFile $ssh_folder/id_rsa" | \
-        sudo -i -u "$odoo_user" tee "$ssh_folder/config" > /dev/null
+        echo $log_src[`date +%F.%H:%M:%S`]' Scanning GitHub key...'
+        # Hide ssh-keyscan stderr output since it's actually log message
+        ssh-keyscan github.com 2> /dev/null | \
+            sudo -i -u "$odoo_user" tee "$ssh_folder/known_hosts" > /dev/null
 
-    # Secure SSH key
-    chmod 400 "$ssh_folder/id_rsa"
+        # Bind SSH key to GitHub host
+        echo "host github.com
+                HostName github.com
+                User git
+                IdentityFile $ssh_folder/id_rsa" | \
+            sudo -i -u "$odoo_user" tee "$ssh_folder/config" > /dev/null
+
+        # Secure SSH key
+        chmod 400 "$ssh_folder/id_rsa"
+    fi
 }
 
 function _download_addons {
     # 2 reasons to download extra addons:
     #  1) ENV variable ADDONS_REPO is defined
     #  2) There's a file called `oca_dependencies.txt` at the root of extra addons folder
-    if [ "$ADDONS_REPO" -o -a /opt/odoo/additional_addons/oca_dependencies.txt ]; then
+    if [ "$ADDONS_REPO" -o -f /opt/odoo/additional_addons/oca_dependencies.txt ]; then
         # Git config for target user
         sudo -i -u "$odoo_user" git config --global user.email "webmaster@elico-corp.com"
         sudo -i -u "$odoo_user" git config --global user.name "Elico Corp - Odoo Docker"
 
         # Setup SSH key
-        if [ -a /opt/odoo/ssh/id_rsa ]; then
+        if [ -f /opt/odoo/ssh/id_rsa ]; then
             _setup_ssh_key
         fi
 
-        # Always fetch dependencies unless specified
+        # Fetch dependencies by default
         if [[ -z "$FETCH_OCA_DEPENDENCIES" ]]; then
             FETCH_OCA_DEPENDENCIES=True
         fi
@@ -140,8 +145,10 @@ function _host_user_mapping {
 
     # Create target user
     if [ "$exists" == "0" ]; then
-        echo $log_src[`date +%F.%H:%M:%S`]' Creating target Odoo user...'
+        # Odoo user is now the target Odoo user
         odoo_user="$TARGET_USER_NAME"
+
+        echo $log_src[`date +%F.%H:%M:%S`]' Creating target Odoo user...'
         adduser --uid "$TARGET_UID" --disabled-login --gecos "" --quiet \
             "$odoo_user"
 
@@ -149,19 +156,23 @@ function _host_user_mapping {
         # of /opt/odoo
         usermod -a -G odoo "$odoo_user"
     else
-        # Target user already exists in the following cases:
-        #  1) Mapping with the same UID as odoo, OK
-        #  2) Target user has already been created (e.g. container has been
-        #     restarted), OK
-        #  3) Mapping with another existing user (e.g. root, etc.), not OK
+        # Check whether trying to map with the same UID as `odoo` user
         odoo_user_id=$( id -u "$odoo_user" )
-        target_uid_name=$( getent passwd "$TARGET_UID" | cut -d: -f1 )
 
-        if [ "$TARGET_UID" -ne "$odoo_user_id" ] && \
-                [ "$TARGET_USER_NAME" != "$target_uid_name" ]; then
-            echo $log_src[`date +%F.%H:%M:%S`]' ERROR: Cannot create target' \
-                'user as target UID already exists.'
-            exit 1
+        if [ "$TARGET_UID" -ne "$odoo_user_id" ]; then
+
+            # Check whether trying to map with an existing user other than the
+            # target user
+            target_uid_name=$( getent passwd "$TARGET_UID" | cut -d: -f1 )
+
+            if [ "$TARGET_USER_NAME" != "$target_uid_name" ]; then
+                echo $log_src[`date +%F.%H:%M:%S`]' ERROR: Cannot create' \
+                    'target user as target UID already exists.'
+            else
+                # Target user has already been created (e.g. container has
+                # been restarted)
+                odoo_user="$TARGET_USER_NAME"
+            fi
         fi
     fi
 }
@@ -174,8 +185,8 @@ function start {
     fi
 
     # If the folders mapped to the volumes didn't exist, Docker has created
-    # them with root instead of the target Odoo user. Making sure to give back
-    # the ownership to the corresponding host user.
+    # them with root instead of the target user. Making sure to give back the
+    # ownership to the corresponding host user.
     _ensure_odoo_user_owns_volumes
 
     echo $log_src[`date +%F.%H:%M:%S`]' Checking special requirements...'

@@ -8,9 +8,6 @@ libssl-dev
 libxml2-dev
 libxrender1
 libxslt1-dev
-node-less
-nodejs
-npm
 postgresql-client-9.5
 python3-dev
 python3-pip

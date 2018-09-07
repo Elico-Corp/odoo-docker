@@ -54,7 +54,7 @@ RUN curl -o wkhtmltox.tar.xz -SL https://github.com/wkhtmltopdf/wkhtmltopdf/rele
         && tar xvf wkhtmltox.tar.xz \
         && cp wkhtmltox/lib/* /usr/local/lib/ \
         && cp wkhtmltox/bin/* /usr/local/bin/ \
-        && cp -r wkhtmltox/share/man/man1 /usr/local/share/man/
+        && rm -rf wkhtmltox
 
 # Startup script for custom setup
 ADD sources/startup.sh /opt/scripts/startup.sh

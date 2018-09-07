@@ -48,10 +48,6 @@ RUN pip3 install -r /opt/odoo/sources/odoo/requirements.txt
 ADD sources/pip.txt /opt/sources/pip.txt
 RUN pip3 install -r /opt/sources/pip.txt
 
-# Install LESS (TO BE CHECKED: LESS DEPRECATED IN V12)
-#RUN npm install -g less@2.7.3 less-plugin-clean-css@1.5.1 \
-#  && ln -s /usr/bin/nodejs /usr/bin/node
-
 # Install wkhtmltopdf based on QT5
 RUN curl -o wkhtmltox.tar.xz -SL https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.4/wkhtmltox-0.12.4_linux-generic-amd64.tar.xz \
         && echo '3f923f425d345940089e44c1466f6408b9619562 wkhtmltox.tar.xz' | sha1sum -c - \

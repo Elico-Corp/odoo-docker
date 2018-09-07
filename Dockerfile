@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:16.04
 MAINTAINER Elico Corp <webmaster@elico-corp.com>
 
 # Define build constants
@@ -53,8 +53,6 @@ RUN pip3 install -r /opt/sources/pip.txt
 #  && ln -s /usr/bin/nodejs /usr/bin/node
 
 # Install wkhtmltopdf based on QT5
-# Use same version as Odoo, SA: https://github.com/odoo/docker/blob/master/11.0/Dockerfile
-
 RUN curl -o wkhtmltox.tar.xz -SL https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.4/wkhtmltox-0.12.4_linux-generic-amd64.tar.xz \
         && echo '3f923f425d345940089e44c1466f6408b9619562 wkhtmltox.tar.xz' | sha1sum -c - \
         && tar xvf wkhtmltox.tar.xz \

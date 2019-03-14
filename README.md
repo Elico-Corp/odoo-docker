@@ -81,6 +81,7 @@ more information about Compose, see the [official documentation][dc-doc].
         image: postgres:9.5
         environment:
           - POSTGRES_USER=odoo
+          - POSTGRES_DB=postgres
 
       odoo:
         image: elicocorp/odoo:10.0

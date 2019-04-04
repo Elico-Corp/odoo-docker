@@ -52,7 +52,7 @@ RUN pip3 install -r /opt/sources/pip.txt
 ADD https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.xenial_amd64.deb \
   /opt/sources/wkhtmltox.deb
 RUN apt update \
-  && apt install -yq xfonts-75dpi \
+  && apt install -yq xfonts-base xfonts-75dpi \
   && dpkg -i /opt/sources/wkhtmltox.deb
 
 # Startup script for custom setup

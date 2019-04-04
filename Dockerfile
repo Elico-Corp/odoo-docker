@@ -49,7 +49,7 @@ ADD sources/pip.txt /opt/sources/pip.txt
 RUN pip3 install -r /opt/sources/pip.txt
 
 # Install wkhtmltopdf based on QT5
-ADD https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.trusty_amd64.deb \
+ADD https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.xenial_amd64.deb \
   /opt/sources/wkhtmltox.deb
 RUN dpkg -i /opt/sources/wkhtmltox.deb
 

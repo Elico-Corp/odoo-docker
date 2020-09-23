@@ -6,6 +6,7 @@ libldap2-dev
 libsasl2-dev
 libssl-dev
 libxml2-dev
+libpq-dev
 libxrender1
 libxslt1-dev
 postgresql-client

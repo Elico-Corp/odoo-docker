@@ -59,6 +59,12 @@ ADD https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.1/wkhtmlto
   /opt/sources/wkhtmltox.deb
 RUN dpkg -i /opt/sources/wkhtmltox.deb
 
+# Install postgresql-client
+RUN apt update && apt install -yq lsb-release
+RUN curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+RUN sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+RUN apt update && apt install -yq postgresql-client
+
 # Startup script for custom setup
 ADD sources/startup.sh /opt/scripts/startup.sh
 

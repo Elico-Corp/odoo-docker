@@ -10,7 +10,6 @@ libxslt1-dev
 node-less
 nodejs
 npm
-postgresql-client-10
 python-dev
 python-pip
 sudo

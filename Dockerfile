@@ -2,7 +2,7 @@ FROM ubuntu:20.04
 MAINTAINER Elico Corp <webmaster@elico-corp.com>
 
 # Define build constants
-ENV GIT_BRANCH=14.0 \
+ENV GIT_BRANCH=master \
   PYTHON_BIN=python3 \
   SERVICE_BIN=odoo-bin
 

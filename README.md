@@ -46,16 +46,16 @@ host. For more information about Docker Engine, see the
 Running this image without specifying any command will display this help
 message:
 
-    $ docker run elicocorp/odoo:16.0
+    $ docker run elicocorp/odoo:17.0
 
 To display the user manual, run the image with the command `man`. Redirecting
 `stdout` to `less` is highly recommended:
 
-    $ docker run elicocorp/odoo:16.0 man | less
+    $ docker run elicocorp/odoo:17.0 man | less
 
 To start Odoo, run the image with the command `start`:
 
-    $ docker run elicocorp/odoo:16.0 start
+    $ docker run elicocorp/odoo:17.0 start
 
 The easiest way to use this image is to run it along with a [PostgreSQL][pg]
 image. By default, Odoo is configured to connect with a PostgreSQL host named
@@ -83,7 +83,7 @@ more information about Compose, see the [official documentation][dc-doc].
           - POSTGRES_USER=odoo
 
       odoo:
-        image: elicocorp/odoo:16.0
+        image: elicocorp/odoo:17.0
         command: start
         ports:
           - 127.0.0.1:8069:8069
@@ -149,7 +149,7 @@ The `docker-compose.yml` should look like:
           - POSTGRES_PASSWORD=strong_pg_superuser_password
 
       odoo:
-        image: elicocorp/odoo:16.0
+        image: elicocorp/odoo:17.0
         command: start
         ports:
           - 127.0.0.1:8069:8069
@@ -202,7 +202,7 @@ The `docker-compose.yml` should look like:
           - POSTGRES_PASSWORD=strong_pg_superuser_password
 
       odoo:
-        image: elicocorp/odoo:16.0
+        image: elicocorp/odoo:17.0
         command: start
         ports:
           - 127.0.0.1:8069:8069
@@ -336,7 +336,7 @@ The `docker-compose.yml` should look like:
         user: 1001:1001
 
       odoo:
-        image: elicocorp/odoo:16.0
+        image: elicocorp/odoo:17.0
         command: start
         ports:
           - 127.0.0.1:8069:8069
@@ -451,7 +451,7 @@ as well as all the Git repositories it depends on, you can use the following
         user: 1001:1001
 
       odoo:
-        image: elicocorp/odoo:16.0
+        image: elicocorp/odoo:17.0
         command: start
         ports:
           - 127.0.0.1:8069:8069
@@ -523,7 +523,7 @@ The `docker-compose.yml` should look like:
         user: 1001:1001
 
       odoo:
-        image: elicocorp/odoo:16.0
+        image: elicocorp/odoo:17.0
         command: start
         ports:
           - 127.0.0.1:8069:8069

@@ -15,6 +15,17 @@ RUN apt update \
   && locale-gen en_US.UTF-8 \
   && update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
 
+# Install python 3.10.11
+RUN apt-get -yq install wget libffi-dev
+RUN mkdir /python && cd /python && \
+    wget -c https://www.python.org/ftp/python/3.10.11/Python-3.10.11.tgz
+RUN cd /python && tar -zxvf Python-3.10.11.tgz && \
+    cd Python-3.10.11 && \
+    ls -lhR && \
+    ./configure --enable-optimizations && \
+    make install && \
+    rm -rf /python
+
 # Install APT dependencies
 ADD sources/apt.txt /opt/sources/apt.txt
 RUN apt update \

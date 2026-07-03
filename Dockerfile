@@ -1,35 +1,31 @@
-FROM ubuntu:20.04
+FROM ubuntu:24.04
 MAINTAINER Elico Corp <webmaster@elico-corp.com>
 
 # Define build constants
-ENV GIT_BRANCH=17.0 \
+ENV GIT_BRANCH=19.0 \
   PYTHON_BIN=python3 \
-  SERVICE_BIN=odoo-bin
+  SERVICE_BIN=odoo-bin \
+  PIP_BREAK_SYSTEM_PACKAGES=1
+
+ARG DEBIAN_FRONTEND=noninteractive
 
 # Set timezone to UTC
 RUN ln -sf /usr/share/zoneinfo/Etc/UTC /etc/localtime
 
 # Generate locales
-RUN apt update \
-  && apt -yq install locales \
+RUN apt-get update \
+  && apt-get -yq install locales \
   && locale-gen en_US.UTF-8 \
   && update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
 
-# Install python 3.10.11
-RUN apt-get -yq install wget libffi-dev
-RUN mkdir /python && cd /python && \
-    wget -c https://www.python.org/ftp/python/3.10.11/Python-3.10.11.tgz
-RUN cd /python && tar -zxvf Python-3.10.11.tgz && \
-    cd Python-3.10.11 && \
-    ls -lhR && \
-    ./configure --enable-optimizations && \
-    make install && \
-    rm -rf /python
+ENV LANG=en_US.UTF-8 \
+  LC_ALL=en_US.UTF-8
 
 # Install APT dependencies
 ADD sources/apt.txt /opt/sources/apt.txt
-RUN apt update \
-  && awk '! /^ *(#|$)/' /opt/sources/apt.txt | xargs -r apt install -yq
+RUN apt-get update \
+  && awk '! /^ *(#|$)/' /opt/sources/apt.txt | xargs -r apt-get install -yq \
+  && rm -rf /var/lib/apt/lists/*
 
 # Create the odoo user
 RUN useradd --create-home --home-dir /opt/odoo --no-log-init odoo
@@ -50,7 +46,7 @@ RUN git clone --depth=1 https://github.com/odoo/odoo.git -b $GIT_BRANCH \
 ADD sources/odoo.conf /opt/odoo/etc/odoo.conf
 ADD auto_addons /opt/odoo/auto_addons
 
-User 0
+USER root
 
 # Install Odoo python dependencies
 RUN pip3 install -r /opt/odoo/sources/odoo/requirements.txt
@@ -65,12 +61,6 @@ RUN pip3 install -r /opt/sources/pip.txt
 # RUN apt update \
 #  && apt install -yq xfonts-base xfonts-75dpi \
 #  && dpkg -i /opt/sources/wkhtmltox.deb
-
-# Install postgresql-client
-RUN apt update && apt install -yq lsb-release
-RUN curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-RUN sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
-RUN apt update && apt install -yq postgresql-client
 
 # Startup script for custom setup
 ADD sources/startup.sh /opt/scripts/startup.sh
@@ -103,8 +93,6 @@ RUN from=$( awk '/^## Usage/{ print NR; exit }' /usr/share/man/man.txt ) && \
   tee /usr/share/man/help.txt > /dev/null
 
 # Use dumb-init as init system to launch the boot script
-ADD https://github.com/Yelp/dumb-init/releases/download/v1.2.0/dumb-init_1.2.0_amd64.deb /opt/sources/dumb-init.deb
-RUN dpkg -i /opt/sources/dumb-init.deb
 ADD bin/boot /usr/bin/boot
 ENTRYPOINT [ "/usr/bin/dumb-init", "/usr/bin/boot" ]
 CMD [ "help" ]
